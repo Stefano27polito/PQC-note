@@ -1,0 +1,871 @@
+\section{Lattice-based cryptography}
+
+\subsection{NTRU}
+\begin{quotation}
+    \textit{\textbf{Author's note:} As I already said, I strongly suggest to read the original paper, because the professor only gives a very high level overview of the scheme, and it's not possible to understand the details of the scheme without reading the original paper.\\
+    Moreover, this paragraph will contain the fondumental parts needed aswer to a possible question in the exam.}
+\end{quotation}
+
+\subsubsection{Parameters and notation}
+N,p,q integers with gcd(p,q)=1 and q>p.\\
+(p and q are not necessarily prime and N$\neq$ pq)
+\bigskip
+
+\noindent
+$R = \mathbb{Z}[X] / (X^N - 1)$ is the set of polynomials woth integer coefficients and degree at most N-1, they are all the possible reminders with respect to the division by $X^N - 1$.\\
+The product in R will be denoted by $\circledast$
+\bigskip
+
+\noindent
+$\mathcal{L}_f, \mathcal{L}_g, \mathcal{L}_\phi, \mathcal{L}_m$ are subsets of R.
+
+\subsubsection*{Remark}
+In R, $X^N = 1$ or equivalently $X^N \equiv 1 \mod (X^N - 1)$\\
+Indeed, $X^N = 1 \cdot (X^N - 1) + 1$ and the reminder of the division of $X^N$ by $X^N - 1$ is 1.
+
+\subsubsection*{Example}
+Consider N=4 and F,G $\in$ R:
+\begin{align*}
+    &F= F_0 + F_1 X + F_2 X^2 + F_3 X^3 \\
+    &\text{and}\\
+    &G= G_0 + G_1 X + G_2 X^2 + G_3 X^3
+\end{align*}
+
+\noindent
+We have:
+\begin{align*}
+    &F \circledast G = (F_0 + F_1 X + F_2 X^2 + F_3 X^3)\\ 
+    &\circledast (G_0 + G_1 X + G_2 X^2 + G_3 X^3) = \\
+    &= F_0 G_0 + F_0 G_1 X + F_0 G_2 X^2 + F_0 G_3 X^3 + F_1 \\
+    &G_0 X + F_1 G_1 X^2 + F_1 G_2 X^3 + F_1 G_3 X^4 + \\
+    &F_2 G_0 X^2 + F_2 G_1 X^3 + F_2 G_2 X^4 + F_2 G_3 X^5 + \\
+    &F_3 G_0 X^3 + F_3 G_1 X^4 + F_3 G_2 X^5 + F_3 G_3 X^6=
+\end{align*}
+\noindent
+But we have that $X^4 = 1$ so:
+
+\begin{align*}
+    = F_0 G_0 + F_1 G_3 + F_2 G_2 + F_3 G_1 + \\
+    (F_0 G_1 + F_1 G_0 + F_2 G_3 + F_3 G_2) X + \\
+    (F_0 G_2 + F_1 G_1 + F_2 G_0 + F_3 G_3) X^2 + \\
+    (F_0 G_3 + F_1 G_2 + F_2 G_1 + F_3 G_0) X^3
+\end{align*}
+
+\subsubsection{Key Generation}
+\begin{algorithm}
+\begin{algorithmic}[1]
+
+    \State Select $f \in \mathcal{L}_f \subseteq R$ s.t f is invertible in R$\mod$p and$\mod$q
+
+    \State Select $g \in \mathcal{L}_g \subseteq R$
+
+    \State Evaluate $F_p$ and $F_q$ the inverse of f in R$\mod$p and$\mod$q
+
+    \State Evaluate $h \equiv F_q \circledast g \mod q$
+
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection{Encryption}
+Encryption of a message $m \in \mathcal{L}_m \subseteq R$.
+
+\begin{algorithm}
+\begin{algorithmic}[1]
+
+    \State Select random $\phi \in \mathcal{L}_\phi$
+
+    \State Evaluate $c \equiv p \cdot \phi \circledast h + m \mod q$
+
+\end{algorithmic}
+\end{algorithm}
+
+\noindent
+The one-way function is based on R-LWE
+
+\newpage
+\subsubsection*{Decryption}
+\begin{algorithm}
+\begin{algorithmic}[1] 
+
+    \State Evaluate $a \equiv f \circledast c \mod q$
+
+    \State Evaluate $F_q \circledast a \mod p \equiv m$
+\end{algorithmic}
+\end{algorithm}
+
+\noindent
+\textbf{Note}: In the reduction mod q (and mod p), we use the rapresentation in the inteval $[-\frac{q}{2}, \frac{q}{2}]$ (and $[-\frac{p}{2}, \frac{p}{2}]$) to avoid the wrap around effect.\\
+For example, if we have $q=5$, we do not use {0,1,2,3,4} but we use $\{-2,-1,0,1,2\}$.
+\medskip
+
+\noindent
+The centered representation modulo \(q\) does not prevent the modular reduction itself.\\ 
+Rather, it allows us to interpret residues modulo \(q\) as small signed coefficients.\\ 
+This is crucial in NTRU, because during decryption the intermediate coefficients are expected to be small.\\ 
+If they remain inside the interval \([-\frac q2,\frac q2]\), then the centered reduction recovers their correct signed value.\\ 
+If a coefficient exceeds this interval, a wrap around occurs and the value may be interpreted incorrectly, possibly causing decryption failure.
+\medskip
+
+\noindent
+\textbf{E.g.} Let us consider \(q=11\). The standard representation modulo \(11\) is
+\[
+\{0,1,2,3,4,5,6,7,8,9,10\},
+\]
+whereas the centered representation is
+\[
+\{-5,-4,-3,-2,-1,0,1,2,3,4,5\}.
+\]
+
+\noindent
+Therefore, the residues
+\[
+6,7,8,9,10
+\]
+are interpreted in the centered representation as
+\[
+6 \equiv -5 \pmod{11}, \qquad
+7 \equiv -4 \pmod{11},
+\]
+\[
+8 \equiv -3 \pmod{11}, \qquad
+9 \equiv -2 \pmod{11}, \qquad
+10 \equiv -1 \pmod{11}.
+\]
+\medskip
+
+\noindent
+For example, suppose that after an NTRU computation we obtain the following small coefficients:
+\[
+a=(-1,-4,0,2,-5).
+\]
+All these coefficients belong to the centered interval
+\[
+[-5,5].
+\]
+
+\noindent
+However, if the coefficients are represented modulo \(11\) in the standard way, we obtain
+\[
+a \bmod 11 = (10,7,0,2,6),
+\]
+because
+\[
+-1 \equiv 10 \pmod{11}, \qquad
+-4 \equiv 7 \pmod{11}, \qquad
+-5 \equiv 6 \pmod{11}.
+\]
+
+\noindent
+If we read the vector as
+\[
+(10,7,0,2,6),
+\]
+we may incorrectly interpret some coefficients as large positive values.  
+Instead, using the centered representation, we recover
+\[
+(10,7,0,2,6)
+\longrightarrow
+(-1,-4,0,2,-5).
+\]
+
+\noindent
+Thus, the centered representation allows us to correctly interpret residues modulo \(q\) as small signed coefficients, which is crucial in NTRU-based schemes.
+
+\subsubsection*{Proof of correctness}
+\begin{align*}
+a \equiv f \circledast c \mod q \equiv f \circledast (p \cdot \phi \circledast h + m) \mod q \equiv p \cdot \phi \circledast g + f \circledast m \mod q
+\end{align*}
+
+\noindent
+In the last equality we exploit the secret relation between the public and private keys. In particular the fact that $h \equiv F_q \circledast g \mod q$ is the trapdoor.
+\medskip
+
+\noindent
+For appropriate choices of the parameters, we can ensure that the polynomial $a = p \cdot \phi \circledast g + f \circledast m$ is already reduced mod q, i.e., its coefficients are in the interval $[-\frac{q}{2}, \frac{q}{2}]$.\\
+So that, the polynomial $a$ does not change if it is reduced mod q (we don't have the wrap around effect).
+\medskip
+
+\noindent
+Then, when we evaluate $F_q \circledast a \mod p$, we have 
+\begin{align*}
+    F_q \circledast (p \cdot \phi \circledast g + f \circledast m) \mod p \equiv F_q \circledast f \circledast m \mod p \equiv m
+\end{align*}
+\noindent
+In order to recover original message m, we need that the coefficients of m were already reduced mod p.
+
+\subsubsection*{Remark}
+Consider the ciphertext $c \equiv p \cdot \phi \circledast h + m \mod q$.\\
+If we reduce $c \mod p$ we do not obtain m, because the polynomila $p \cdot \phi \circledast h + m$ has not the coeffincients  in the interval $[-\frac{p}{2}, \frac{p}{2}]$ (we have the wrap around effect), but they are larger, they wrap aroud mod q and consequently we do not find the original message m.\\
+In general we gave the following situation:
+
+\begin{itemize}
+    \item $p \cdot \phi \circledast g + f \circledast m \mod q =\ p \cdot \phi \circledast g + f \circledast m \in \mathbb{Z}_{[X]}/(X^N - 1)$
+    \item $p \cdot \phi \circledast h + m \mod q \neq p \cdot \phi \circledast h + m \in \mathbb{Z}_{[X]}/(X^N - 1)$
+\end{itemize}
+
+\noindent
+It is clearly visible in the following example:
+
+\subsubsection*{Example:}
+Consider $N = 4$, $p = 7$ and $q = 19$.\\
+Suppose 
+\begin{align*}
+    m = x^3 + x^2 + x + 1, \quad f = x^3 + x^2 + 1, \quad \phi \circledast g = 2x^3 + 2x^2+x+2
+\end{align*}
+\medskip
+
+\noindent
+Then we have:
+\begin{align*}
+    F_p = 4x^3+5x^2+5x+5, \quad F_q = 12x^3+13x^2+13x+13 \quad \text{and} \quad f\circledast m = 3x^3 + 3x^2 + 2x + 3
+\end{align*}
+\noindent
+Now we compute:
+\begin{align*}
+    p \cdot \phi \circledast g + f \circledast m
+    &= 14x^3 + 14x^2 + 7x + 14+3x^3 + 3x^2 + 3x + 3 \\
+    &= 17x^3 + 17x^2 + 10x + 17
+\end{align*}
+
+\noindent
+Which is the same polynomial after the reduction mod q:
+\begin{align*}
+    p \cdot \phi \circledast g + f \circledast m \mod q = 17x^3 + 17x^2 + 10x + 17
+\end{align*}
+
+\noindent
+Thus, if we reduce the coefficients mod p, we get $f \circledast m= 17x^3 + 17x^2 + 10x + 17 \mod p = 3x^3 + 3x^2 + 3x + 3$
+\vspace{1 cm}
+
+\noindent
+Let us see what happens to $c = p \cdot \phi \circledast g \circledast F_q + m:$
+\begin{align*}
+    \phi \circledast g \circledast F_q &= 89x^3 + 89x^2 + 89x + 90\\
+    &\text{and}\\
+    p \cdot \phi \circledast g \circledast F_q + m &= 623x^3 + 623x^2 + 623x + 630 + 3x^3 + 3x^2 + 3x + 3 = \\
+    &\quad 626x^3 + 626x^2 + 626x + 633
+\end{align*}
+
+\noindent
+And this polynomial changes after the reduction mod q:
+\begin{align*}
+    p \cdot \phi \circledast g \circledast F_q + m \mod q = 18x^3 + 18x^2 + 18x + 6
+\end{align*}
+
+\noindent
+Thus, if we reduce the coefficients mod p, we DO NOT get m:
+\begin{align*}
+    18x^3 + 18x^2 + 18x + 6 \mod p = 4x^3 + 4x^2 + 4x + 6
+\end{align*}
+\medskip
+
+\noindent
+This is due to the fact that
+\begin{align*}
+    623 \equiv 0 \mod 7, \quad 630 \equiv 0 \mod 7
+\end{align*}
+\noindent
+but
+\begin{align*}
+    &623 \equiv 15 \mod 19 \quad \text{and} \quad 15 \not\equiv 0 \mod 7\\
+    &630 \equiv 3 \mod 19 \quad \text{and} \quad 3 \not\equiv 0 \mod 7
+\end{align*} 
+ 
+\subsubsection{Attacks against NTRU}
+
+\subsubsection*{Brute force}
+We want that  $|\mathcal{L}_f|, |\mathcal{L}_g|, |\mathcal{L}_\phi|$ are large enough to make the brute force attack infeasible.
+\medskip
+
+\noindent
+Considering that $|\mathcal{L}_g| < |\mathcal{L}_f|$, let us evaluate the number of polynomials in $\mathcal{L}_g = \mathcal{L}(d_g, d_g)$ (remember that the polynomials in $\mathcal{L}_g$  are ternary polynomials with $d_g$ coefficients equal to 1, $d_g$ coefficients equal to -1 and the rest of the coefficients equal to 0)
+\medskip
+
+\noindent
+Thus:
+\begin{align*}
+    |\mathcal{L}_g| &= \binom{N}{d_g} \cdot \binom{N-d_g}{d_g} \cdot 1 = \frac{N!}{d_g! \cancel{(N-d_g) !}} \cdot \frac{\cancel{(N-d_g)!}}{d_g! (N-2d_g)!} = \frac{N!}{d_g!^2 (N-2d_g)!}
+\end{align*}
+\vspace{0.5 cm}
+
+\subsubsection*{Multiple Transmission Attack}
+If we use the same publick key $h$ to encrypt several times the same message $m$, then an attacker can recover a sufficient number of coefficients of the random polynomial used during the encryption and then use \textbf{brute froce} to recover the original message.
+\medskip
+
+\noindent
+Indeed, if we have
+\begin{align*}
+    &c_1 \equiv p \cdot \phi_1 h + m \mod q\\
+    &c_2 \equiv p \cdot \phi_2 h + m \mod q\\
+    &\vdots \\
+    &c_k \equiv p \cdot \phi_k h + m \mod q
+\end{align*}
+\noindent
+then the attacker can compute:
+\begin{align*}
+  c_1 - c_2 &\equiv p \cdot h (\phi_2 - \phi_1) \mod q \\
+  \intertext{from which}
+  \phi_2 - \phi_1 &\equiv p^{-1} h^{-1} (c_1 - c_2) \mod q
+\end{align*}
+
+\noindent
+Thus, and attacker discovers $\phi_2 - \phi_1$ and similarly $\phi_3 - \phi_1, \phi_4 - \phi_1, \ldots, \phi_k - \phi_1$.\medskip
+
+\noindent
+Thanks to this polynomial can recover some coefficients of $\phi_1$ when he observe the coefficients $\neq 0,1,-1$ in the polynomials $\phi_2 - \phi_1, \phi_3 - \phi_1, \ldots, \phi_k - \phi_1$.
+
+\subsubsection*{Example}
+Remember that the polynomials $\phi_1, \phi_2, \ldots, \phi_k$ are ternary polynomials.\\
+Suppose that $N = 8$ and
+\begin{align*}
+    &\phi_1 = x^5 + x^3 + 1\\
+    &\phi_2 = x^7 + x^6 - x^4 + x^3 + x\\
+    &\phi_3 = -x^5 + x^4 + x^2 -x
+\end{align*}
+\noindent
+Then we have:
+\begin{align*}
+    &\phi_2 - \phi_1 = x^7 + x^6 - x^5 - x^4 + 2x^3 + x - 1\\
+    &\phi_3 - \phi_1 = -2x^5 + x^4 + x^3 + x^2 - 2x + 1
+\end{align*}
+
+\noindent
+If we only know these, we are sure that the coeffient of $x^3$ in $\phi_1$ must be -1 (otherwise it is impossible that $\phi_2 - \phi_1$ has a coefficient of 2 for $x^3$)\\
+Similarly, we are sure that the coefficient of $x^5$ and $x$ in $\phi_1$ must be 1
+\vspace{0.5 cm}
+
+\subsubsection*{Lattice based attack}
+Consider:
+\begin{align*}
+    &f = f_0 + f_1 x + \ldots + f_{N-1} x^{N-1} \\
+    &g = g_0 + g_1 x + \ldots + g_{N-1} x^{N-1} \\
+    &h = h_0 + h_1 x + \ldots + h_{N-1} x^{N-1}
+\end{align*}
+
+\noindent
+and the corresponding vectors:
+\begin{align*}
+    &\vect{f} = (f_0, f_1, \ldots, f_{N-1}) \\
+    &\vect{g} = (g_0, g_1, \ldots, g_{N-1}) \\
+    &\vect{h} = (h_0, h_1, \ldots, h_{N-1})
+\end{align*}
+
+\noindent
+The vector $(\alpha \vect{f}, \vect{g}) = (\alpha f_0, \alpha f_1, \ldots, \alpha f_{N-1}, g_0, g_1, \ldots, g_{N-1})$ is a short vector in the lattice of rank 2N whose basis is obtained exploiting the public key, for a convenient choice of $\alpha$.
+\medskip
+
+\subsubsection*{Example:}
+Consider $N = 3$ and the lattice whose basis is given by the rows of the following 6x6 matrix:
+\begin{align*}
+    \begin{pmatrix}
+        \alpha & 0 & 0 & h_0 & h_1 & h_2 \\
+        0 & \alpha & 0 & h_2 & h_0 & h_1 \\
+        0 & 0 & \alpha & h_1 & h_2 & h_0 \\
+        0 & 0 & 0 & q & 0 & 0 \\
+        0 & 0 & 0 & 0 & q & 0 \\
+        0 & 0 & 0 & 0 & 0 & q
+    \end{pmatrix}
+\end{align*}
+
+\noindent
+we have that
+\begin{align*}
+    &f_0(\alpha, 0, 0, h_0, h_1, h_2) + f_1(0, \alpha, 0, h_2, h_0, h_1) + f_2(0, 0, \alpha, h_1, h_2, h_0)\\
+    &= (\alpha f_0, \alpha f_1, \alpha f_2, f_0 h_0 + f_1 h_2 + f_2 h_1, f_0 h_1 + f_1 h_0 + f_2 h_2, f_0 h_2 + f_1 h_1 + f_2 h_0)
+\end{align*}
+
+\noindent
+Note that the last three coordinates of this vector are equal to $g_0, g_1, g_2$ respectively.
+\medskip
+
+\noindent
+Indeed, remember that
+\begin{align*}
+    h = F_q \circledast g \mod q \iff F_q \circledast h \equiv g \mod q
+\end{align*}
+
+\subsubsection{Size comparison}
+
+\begin{table}[H]
+\centering
+\small
+\renewcommand{\arraystretch}{1.35}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|l|c|c|c|c|c|c|}
+\hline
+\rowcolor{gray!20}
+& \textbf{PL} & \textbf{CT} & \textbf{RATIO} & \textbf{PK} & \textbf{SK} & \textbf{SECURITY} \\
+\hline
+\textbf{RSA} & 2048 & 2048 & 1 & 2048 & 2048 & 100 \\
+\hline
+\textbf{MCELIECE} & 524 & 1024 & 1.9 & $524 \cdot 1024$ & $524^2 + 524 \cdot 1024 + 8749$ & 65 \\
+\hline
+\textbf{NIED} & 284 & 500 & 1.76 & $500 \cdot 1024$ & $500^2+500 \cdot 1024 + 8749$ & 65 \\
+\hline
+\end{tabular}%
+}
+\caption{Size of plaintexts, ciphertexts and keys in bits.}
+\end{table}
+
+\noindent
+\underline{NTRU, Case B}, $N=167$, $p=3$, $q=128$, $R = \mathbb{Z}[X]/(X^N-1)$
+\medskip
+
+\begin{itemize}
+    \item \textbf{Plaintext:} $m \in R$ with coefficients reduced modulo p:\\ $\lceil \log_2 p \rceil \cdot N = 334 \text{ bits}$
+    \item \textbf{Ciphertext:} $c \in R$ with coefficients reduced modulo q:\\ $\lceil \log_2 q \rceil \cdot N = 1169 \text{ bits}$
+    \item \textbf{Ratio:} $\frac{1169}{334} = 3.5$
+    \item \textbf{Public key:} $h \in R$ with coefficients reduced modulo q:\\ $\lceil \log_2 q \rceil \cdot N = 1169 \text{ bits}$
+    \item \textbf{Private key:} $f, F_p \in R$ with coefficients reduced modulo p:\\ $2 \cdot \lceil \log_2 p \rceil \cdot N = 668 \text{ bits}$
+\end{itemize}
+\medskip
+
+\noindent
+\textbf{NOTE:} Remember that for representing an integer $N$, we need $\lceil \log_2 N \rceil$ bits.
+
+\newpage
+\subsection{Falcon}
+
+\begin{quotation}
+    \textit{\textbf{Author's note:} Also in this case, I strongly suggest to read the original paper.}
+\end{quotation}
+
+\noindent
+Before describing Falcon scheme, we need to introduce some mathematical tools.\\
+In particular it is necessary to introduce the concept of \textbf{Cyclotomic Polynomials}.
+
+\subsubsection {Cyclotomic Polynomials}
+The roots of the polynomial $X^N - 1$ are called N-th roots of unity and we denote them by $z_0, z_1, \ldots, z_{N-1}$.
+\medskip
+
+\noindent
+We can explicitly write the complex number:
+\begin{align*}
+    z_k = e^{\frac{2 k\pi i}{N}} = \cos\left(\frac{2 k\pi}{N}\right) + i \sin\left(\frac{2 k\pi}{N}\right)
+\end{align*}
+
+\noindent
+for $k = 0, 1, \ldots, N-1$.
+\medskip
+
+\noindent
+Indeed $(z_k)^N = e^{2 k\pi i} = \cos 2k\pi + i \sin 2k\pi = 1$
+\bigskip
+
+\noindent
+The set of ALL N-th roots of unity
+\begin{align*}
+    M_N = \{z_0, z_1, \ldots, z_{N-1}\}
+\end{align*}
+\noindent
+is a \underline{cycling group} of order N and the generators of $M_N$ are called N-th primitive roots of unity.\\
+\vspace{1 cm}
+
+\noindent
+Recalling that a cycling group of order N is isomorphic to the additive group $(\mathbb{Z}_N$, +), we have that:
+\begin{itemize}
+    \item Number of generators of $Z_N$ is $\varphi(N)$,\\ 
+    so the number of generators of $M_N$ is $\varphi(N)$, i.e., the number of N-th primitive roots of unity is $\varphi(N)$
+    \item The generator of $Z_N$  are all and only the integers $k$ comprime with N\\
+    so  $z_k$ is a primitive root of unity if and only if $k$ is coprime with N (i.e., $\gcd(k, N) = 1$)
+\end{itemize} 
+
+\begin{defBox}{N-th Cyclotomic Polynomial}
+    TThe N-th cyclotomic polynomial $\Psi_N(x)$ is the monic polynomial whose roots are all and only the N-th primitive roots of unity, i.e., $\Psi_N(x) = \prod_{k: \gcd(k, N) = 1} (x - z_k)$
+\end{defBox}
+\noindent
+\textbf{Remark:} deg $\Psi_N(x) = \varphi(N)$
+\vspace{0.5 cm}
+
+\begin{propBox}{}{}
+    \begin{align*}
+        x^N - 1 = \prod_{d | N} \Psi_d(x)
+    \end{align*}    
+\end{propBox}
+
+\noindent
+\textbf{Idea of Proof:}
+\begin{itemize}
+    \item for all $d | N$, the roots of $\Psi_d(x)$ are also roots of $x^N - 1$ (because they are N-th roots of unity)\\
+    Indeed, let $\alpha$ be a root of $\Psi_d(x)$, i.e., $\alpha^d = 1$ 
+    \\
+    then, $\alpha^N = \alpha^{md} = (\alpha^d)^m = 1^m = 1 (d \mid N \implies N = md)$
+    \item It is also necessary to prove that
+    \begin{align*}
+        deg \prod_{d | N} \Psi_d(x) = N \iff \sum_{d | N} \varphi(d) = N
+    \end{align*}
+\end{itemize}
+
+\noindent
+Now, let us consider
+\begin{align*}
+    &N= 1, \quad, x-1 = \Psi_1(x)\\
+    &N = 2, \quad x^2 - 1 = \Psi_1(x) \cdot \Psi_2(x) = (x-1)\Psi_2(x) \implies \boxed{\Psi_2(x) = x + 1}\\
+    &N = 3, \quad x^3 - 1 = \Psi_1(x) \cdot \Psi_3(x) = (x-1)\Psi_3(x) \implies \boxed{\Psi_3(x) = x^2 + x + 1}\\
+    &N = 4, \quad x^4 - 1 = \Psi_1(x) \cdot \Psi_2(x) \cdot \Psi_4(x) = (x-1)(x+1)\Psi_4(x) \implies \boxed{\Psi_4(x) = x^2+1}\\
+    &\vdots\\
+    &N = 8, \quad x^8 - 1 = \Psi_1(x) \cdot \Psi_2(x) \cdot \Psi_4(x) \cdot \Psi_8(x) = (x-1)(x+1)(x^2+1)\Psi_8(x)\\ 
+    &\implies \boxed{\Psi_8(x) = x^4 + 1}\\
+    &\vdots\\
+    &N = 2^k, \quad x^{2^k} - 1 = \Psi_1(x) \cdot \Psi_2(x) \ldots \Psi_{2^k}(x) = (x-1)(x+1)(x^2+1)(x^4+1) \cdots (x^{2^{k-1}} + 1)\Psi_{2^k}(x)\\
+    &\implies \boxed{\Psi_{2^k}(x) = x^{2^{k-1}} + 1}
+\end{align*}
+
+\subsubsection{Genealogy of Falcon}
+Falcon is the product of many years of work, not only by the authors but also by others. This section explains how these works gradually led to Falcon as we know it.
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[
+        % Stile personalizzato per i rettangoli
+        box/.style={
+            draw, 
+            rounded corners=4pt, 
+            align=center, 
+            minimum width=2.6cm, 
+            minimum height=1.4cm,
+            inner sep=6pt
+        },
+        % Stile delle frecce (Stealth assomiglia molto a quello dell'immagine)
+        >=Stealth,
+    ]
+
+      
+    \node[box] (gpv) {GPV\\ Framework};
+    \node[box, right=1.2cm of gpv] (provable) {Provable\\ \textsc{NtruSign}};
+    \node[box, right=1.2cm of provable] (inst) {Instantiation\\ of GPV IBE};
+    \node[box, right=1.2cm of inst] (falcon) {\textsc{Falcon}};
+
+    
+    \node[box, above=0.7cm of gpv] (ntrusign) {\textsc{NtruSign}};
+    \node[box, below=0.7cm of inst] (ffs) {Fast Fourier\\ Sampling};
+
+    
+    \draw[->] (gpv) -- (provable);
+    \draw[->] (provable) -- (inst);
+    \draw[->] (inst) -- (falcon);
+    
+    % Frecce diagonali
+    \draw[->] (ntrusign) -- (provable);
+    \draw[->] (ffs) -- (falcon);
+
+    \end{tikzpicture}
+    \caption{Genealogy of FALCON}
+    \label{fig:falcon_genenealogy}
+\end{figure}
+
+
+\subsubsection{The Gentry-Peikert-Vaikuntanathan (GPV) Framework}
+The GPV framework establishes a framework for constructing a secure lattice-based signature scheme.
+
+\begin{itemize}
+    \item The public key contain a full-rank matrix $A \in \mathbb{Z}_q^{n \times m}$ (where m > n) generating a q-ary lattice $\Lambda$
+    
+    \item The private key contains a matrix $B \in \mathbb{Z}_q^{m \times m}$  generating $\Lambda_q^\bot$\\
+    where $\Lambda_q^\bot$ denotes the lattice ORTOGONAL to $\Lambda$: $\forall x \in \Lambda$ and $ y \in \lambda_q^\bot$, we have $\langle x, y \rangle \equiv 0 \mod q$ (where $\langle x, y \rangle$ is the standard inner product between the vectors $x$ and $y$)\\
+    Equivalently, the rows of $A$ and $B$ are pairwise orthogonal: $B x A^t = 0$
+
+    \item Given a message $m$, a signature of $m$ is a \underline{short vector} $s \in \mathbb{Z}^m$ such that $sA^t = H(m)$, where $H$ is a hash function ($\{0, 1\}* \to \mathbb{Z}_q^n$)
+    
+    \item Given $A$, verification of a signature $s$ for a message $m$ consists in checking that $sA^t = H(m)$ and that $s$ is short enough (i.e., $\|s\| \leq \beta$ for some parameter $\beta$)\\
+    So it is straightforward 
+
+    \item Computing a valid signature is more difficult.\\
+    First, compute $c_0 \in \mathbb{Z}_q^m$ which verifies $c_0 A^t = H(m)$\\
+    Even if $c_0$ is not short, we can simplify it with linear algebra.\\
+    B is then used to compute a vector $v \in \Lambda_q^\bot$ close to $c_0$\\
+    The difference $s = c_0 - v$ is a valid signature: indeed, $s A^t = c_0A^t - v A^t = c - 0 = H(m)$ and $s$ is short because $v$ is close to $c_0$.
+
+\end{itemize}
+
+\noindent
+Note that $B$ is consider a good basis of $\Lambda_q^\bot$ if the vectors in $B$ are short and close to orthogonal.
+
+\subsubsection{NTRU lattice}
+As already said, Falcon exploits the NTRU lattice.
+\medskip
+
+\noindent
+Let $\phi = x^n +1$ for $n = 2^k$.\\
+A set of NTRU secret consist in 4 polynomials $f, g, F, G \in \mathbb{Z}[X]/(\phi)$ such that 
+
+\begin{align*}
+    fG - gF = q \mod \phi  \text{ (NTRU equation)}.
+\end{align*}
+
+\noindent
+Provided that $f$ is invertible modulo $q$, we can define the public key as $h \gets g  \cdot f^{-1} \mod q$ and the private key as the tuple $(f, g, F, G)$.\\
+Indeed, one can check that the matrices 
+\begin{align*}
+    \left[ \begin{array}{c|c}
+        1 & h \\
+        \hline
+        0 & q
+    \end{array} \right] \quad \text{and} \quad \left[ \begin{array}{c|c}
+        f & g \\
+        \hline
+        F & G
+    \end{array} \right]
+\end{align*}
+
+\noindent
+generate the same lattice, but the first one contains two large polynomials ($h$ and $q$) while the second one contains four small polynomials.
+\medskip
+
+\noindent
+If $f, g$ are generated with enough entropy, then $h$ will look pseudorandom. However in practice, even when $f, g$ are quite small, it remains hard to find small polynomials $f', g'$ such that $h = g' \cdot (f')^{-1} \mod q$. The hardness of this problem constitutes the \textbf{NTRU assumption}.
+
+\subsubsection*{Instantiation with the GPV framework}
+We now instantiate GPV.
+
+\begin{itemize}
+    \item The public basis is the matrix $A = [1 | h^*]$ where $h^*$ is the vector of the coefficients of $h$ (i.e., if $h = h_0 + h_1 x + \ldots + h_{n-1} x^{n-1}$, then $h^* = (h_0, h_1, \ldots, h_{n-1})$)
+    
+    \item The secret basis is the matrix $B = \left[ \begin{array}{c|c}
+        g & -f \\
+        \hline
+        G & -F
+    \end{array} \right]$
+    One can check that $A$ and $B$ are indeed orthogonal:$B x A^* = 0 \mod q$ 
+
+    \item The signature of a message of a message $m$ is composed by two polynomials $s_1, s_2$ such that $s_1 + s_2 h = H(m|r)$, where $r$ is a random salt.\\
+    Note that, since $s_1$ is completely determined by $m, r, s_2$, it is sufficient to store only $(s_2, r)$ in the signature.
+\end{itemize}
+
+\noindent
+\textbf{Computation:}\\
+$A* = [1 | h]$
+
+\begin{align*}
+    B \cdot A^* = \left[ \begin{array}{c|c}
+        g & -f \\
+        \hline
+        G & -F
+    \end{array} \right] \cdot \left[ \begin{array}{c}
+        1 \\
+        \hline
+        h
+    \end{array} \right] =  \left[ \begin{array}{c}
+        g - f h \\
+        \hline
+        G - F h
+    \end{array} \right] =  \left[ \begin{array}{c}
+        g - g \\
+        \hline
+        G - G
+    \end{array} \right] = 0
+\end{align*}    
+
+\noindent
+Since the public key is defined as
+\[
+h \equiv g f^{-1} \pmod q,
+\]
+we have
+\[
+fh \equiv f g f^{-1} \equiv g \pmod q.
+\]
+
+\noindent
+Moreover, from the NTRU equation
+\[
+fG-gF \equiv 0 \pmod q,
+\]
+we obtain
+\[
+fG \equiv gF \pmod q.
+\]
+
+\noindent
+Multiplying both sides by \(f^{-1}\), we get
+\[
+G \equiv Fgf^{-1} \equiv Fh \pmod q.
+\]
+
+\noindent
+Therefore, we get 0 as expected
+
+\subsubsection{Fast Fourier Sampling}
+The authors exploit the Fast Fourier Transform (FFT) to speed up the sampling of the signature.
+\medskip
+
+\noindent
+The idea is to represent the polynomials in the evaluation form, i.e, as vectors of the evaluations of the polynomials at the N-th roots of unity.\\
+So instead of representing a polynomial $a = a_0 + a_1 x + \ldots + a_{n-1} x^{n-1}$ as the vector of its coefficients $(a_0, a_1, \ldots, a_{n-1})$, we represent it as the vector of its evaluations at the N-th roots of unity $(a(z_0), a(z_1), \ldots, a(z_{n-1}))$. where $z_0, z_1, \ldots, z_{n-1}$ are the N-th roots of unity (complex numbers).
+
+
+\subsubsection{Falcon algorithms}
+
+\begin{quotation}
+    \textit{\textbf{Author's note:} This section is made to simplify the description of the main algorithms. For a more detailed description, I suggest to read the original paper.}
+\end{quotation}
+\bigskip
+
+\noindent
+Remember that Falcon fix:
+\begin{align*}
+    q, n \in \mathbb{Z}, \text{ where } n = 2^k\\
+    \phi = x^n + 1\\
+    R = \mathbb{Z}[X]/(\phi)
+\end{align*}
+
+\subsubsection*{Key Generation}
+\begin{algorithm}
+\begin{algorithmic}[1]
+    \State Sample $f, g \in R$ s.t $(||f||, ||g||) < 1.17 \sqrt{q}$
+
+    \State Compute $F, G \in R$ s.t. $fG - gF  = q$ (NTRU equation)
+
+    \State Define B as the matrix $\left[ \begin{array}{c|c}
+        g & -f \\
+        \hline
+        G & -F
+    \end{array} \right]$ good basis of lattice $\Lambda_q^\bot$.
+    Then we compute $\hat{B}$ applying the FFT to each element of $B$ 
+
+    \State Compute $h = g \cdot f^{-1} \mod q$ and define $A = [1 | h^*]$ where $h^*$ is the vector of the coefficients of $h$
+
+    \State Return $pk = h$ and $sk = (f, g, F, G)$
+    
+\end{algorithmic}
+\end{algorithm}
+
+\noindent
+In order to compute $F, G$  we can reduce the problem over the integers, exploiting two operators:
+
+\begin{itemize}
+    \item \textbf{Split:} 
+        \begin{align*}
+            A(x) = a_0 + a_1 x + \ldots + a_{n-1} x^{n-1} \xrightarrow{\text{Split}} (A_0(x), A_1(x))
+        \end{align*}
+        where $A_0(x)$ contains the powers of $x$ with even exponent and $A_1(x)$ contains the powers of $x$ with odd exponent.\\
+        For example, if $A(x) = 3 + 2x + 5x^2 + 7x^3$, then $A_0(x) = 3 + 5x$ and $A_1(x) = 2 + 7x$\\
+        Iterating the split operator, we can split a polynomial in $R$ into $n$ polynomials of degree 0, i.e., into $n$ integers.
+
+    \item \textbf{Merge:}
+        \begin{align*}
+            (A_0(x), A_1(x)) \xrightarrow{\text{Merge}} A(x) = A_0(x^2) + x A_1(x^2)
+        \end{align*}
+        For example, if $A_0(x) = 3 + 5x$ and $A_1(x) = 2 + 7x$, then $A(x) = A_0(x^2) + x A_1(x^2) = 3 + 5x^2 + 2x + 7x^3 = 3 +        2x + 5x^2 + 7x^3$
+\end{itemize}
+
+\subsubsection*{Signature}
+
+\begin{algorithm}
+\begin{algorithmic}[1]
+
+    \State Compute $H(r \mid m) = c$ where $c \in R$
+
+    \State Observe that
+    \[
+        (\vect{c},\vect{0})A^* = c
+    \]
+    where
+    \[
+        A^* = [1 \mid h]
+    \]
+
+    \State Compute
+    \[
+        t = (\vect{c},\vect{0})B^{-1}
+    \]
+    such that
+    \[
+        \vect{t}B = (\vect{c},\vect{0})
+    \]
+
+    \State Find a lattice vector $z$ generated by $B$ close to $t$
+    
+    \State Define
+    \[
+        \vect{s} = (s_1,s_2) = (\vect{t}-\vect{z})\hat{B}
+    \]
+    where $\hat{B}$ is the FFT representation of $B$
+
+    \State Observe that $\vect{s}$ is short and satisfies:
+    \[
+        \vect{s}A^*
+        =
+        (\vect{t}-\vect{z})\hat{B}A^*
+    \]
+
+    \State Since the rows of $B$ are orthogonal to $A^*$, we have:
+    \[
+        z\hat{B}A^* = 0
+    \]
+
+    \State Therefore:
+    \[
+        \vect{s}A^*
+        =
+        t\hat{B}A^*
+        =
+        (\vect{c},\vect{0})B^{-1}\hat{B}A^*
+        =
+        (\vect{c},\vect{0})A^*
+        =
+        \vect{c}
+    \]
+
+    \State Return the signature $(s_2,r)$
+
+\end{algorithmic}
+\end{algorithm}
+
+\noindent
+The main computational challenge is finding a lattice vector $z$ close to $t$.\\
+Falcon solves this problem efficiently exploiting the recursive tree structure of $\hat{B}$ together with FFT representations, reducing the problem to operations over the integers through a divide-and-conquer approach.\\
+Moreover, Gaussian sampling is used in order to randomize the signatures and prevent leakage of information about the private basis.
+\newpage
+
+\subsubsection*{Verification}
+\begin{algorithm}
+\begin{algorithmic}[1]
+    \State Check that $||s_2|| \leq \beta$ for some parameter $\beta$
+    \State Compute $s_1 + s_2 h = c \mod q$ where $c = H(m|r)$
+    \State Return 1 if $s_1 + s_2 h = c \mod q$, 0 otherwise
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection{Comparison}
+\begin{table}[H]
+\centering
+\small
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+\rowcolor{gray!20}
+\textbf{Scheme} & \textbf{Security Level} & \textbf{Public Key} & \textbf{Secret Key} & \textbf{Signature Size} \\
+\hline
+
+RSA-15360 & $\approx 256$ bits & $\approx 2$ KB & $\approx 5$ KB & $\approx 2$ KB \\
+\hline
+
+ECDSA-521 & $\approx 256$ bits & $\approx 0.1$ KB & $\approx 0.04$ KB & $\approx 0.1$ KB \\
+\hline
+
+Classic McEliece & $\approx 256$ bits & $\approx 1.2$ MB & $\approx 14$ KB & N/A \\
+\hline
+
+HQC & $\approx 256$ bits & $\approx 7$ KB & $\approx 7$ KB & N/A \\
+\hline
+
+Falcon-1024 & $\approx 256$ bits & $\approx 1.8$ KB & $\approx 2.3$ KB & $\approx 1.3$ KB \\
+\hline
+
+\end{tabular}
+\caption{Approximate comparison of key and signature sizes for classical and post-quantum cryptographic schemes at the 256-bit security level.}
+\label{tab:pqc_comparison}
+\end{table}
+
+\noindent
+In Falcon, signatures are represented by short polynomials sampled according to a discrete Gaussian distribution.\\
+Although a coefficient in $\mathbb{Z}_q$ would normally require approximately $\log_2(q)$ bits, most sampled coefficients are concentrated around zero.\\
+Indeed, for a Gaussian distribution with mean $\mu$ and standard deviation $\sigma$, approximately $99.7\%$ of the values lie in the interval
+\[
+[\mu - 3\sigma,\mu + 3\sigma].
+\]
+
+\noindent
+Therefore, Falcon can compress signatures efficiently by encoding mainly small coefficients rather than arbitrary elements modulo $q$.\\
+This allows Falcon to achieve significantly smaller signatures compared to many other post-quantum schemes.

@@ -1,0 +1,520 @@
+\section{Linear Algebra}
+Linear algebra is a branch of mathematics that studies vectors, vector spaces, and linear transformations, so linear objects.\\ It provides the foundation for many areas of mathematics and is essential in various applications, including cryptography.
+\medskip
+
+\noindent
+For example, cosider $\mathbb{R}^2 = \mathbb{R}$ x $\mathbb{R} = \{(x,y) : x,y \in \mathbb{R}\}$\\
+In $\mathbb{R}^2$, Euclidean plane, the most simple linear object are \underline{point} or equivalently \underline{vectors}.\\
+\subsection{Vector}
+Indeed, a point in $\mathbb{R}^2$  is indentified by pairs of real numbers. Indeed a vector is an "arrow" strating from the origin, thus a point, i.e., a pair of real numbers, indetifies also a vector.
+\medskip
+
+\begin{center}
+    
+    \begin{tikzpicture}
+
+    % assi
+    \draw[->] (-2,0) -- (3,0); % asse x
+    \draw[->] (0,-2) -- (0,3); % asse y
+
+    % origine
+    \fill (0,0) circle (2pt);
+    \node[below left] at (0,0) {$O$};
+
+    % punto P
+    \fill (2,2) circle (2pt);
+    \node[above right] at (2,2) {$P$};
+
+    % vettore OP
+    \draw[->, thick] (0,0) -- (2,2);
+
+    \end{tikzpicture}
+
+\end{center}
+
+\noindent
+Formally:
+\begin{defBox}{Vector}
+    AA vector v$\in \mathbb{R}^n$ is a n-tuple of real numbers
+        \begin{center}
+            v = (v$_1$, v$_2$, ..., v$_n$)
+        \end{center}
+    
+    \noindent
+    With following operations:
+
+        \begin{itemize}
+        \item \textbf{Multiplication by a scalar}: tv = (tv$_1$, tv$_2$, ..., tv$_n$) for t $\in \mathbb{R}$ and v $\in \mathbb{R}^n$
+        \item \textbf{Sum}: v + w = (v$_1$ +w$_1$, v$_2$ + w$_2$, ..., v$_n$ + w$_n$) for v,w $\in \mathbb{R}^n$
+        \item \textbf{Dot product}: v $\cdot$ w = v$_1$w$_1$ + v$_2$w$_2$ + ... + v$_n$w$_n$ for v,w $\in \mathbb{R}^n$
+        \item \textbf{Norm}: $\|v\| = \sqrt{v_1^2 + v_2^2 + \dots + v_n^2}$ for $v \in \mathbb{R}^n$
+        \end{itemize}
+\end{defBox}
+\noindent
+\textbf{Example:}\\
+Let v = (2,-1,5) and w = ($\sqrt{2}$,$\frac{1}{3}$,0) be two vectors in $\mathbb{R}^3$.\\
+Then:
+\begin{itemize}
+    \item $\frac{1}{2}$v = (1, -$\frac{1}{2}$, $\frac{5}{2}$)
+    \item v + w = (2 + $\sqrt{2}$, -$\frac{2}{3}$, 5)
+    \item $\|w\| = \sqrt{2 + \frac{1}{9} + 0} = \sqrt{\frac{19}{9}} = \frac{\sqrt{19}}{3}$
+\end{itemize}
+
+\begin{defBox}{Linear Independence}
+   GGiven k vectors a$_1$, a$_2$, ..., a$_k$ in $\mathbb{R}^n$, they are \textbf{linearly dependent} if there exist scalars t$_1$, t$_2$, ..., t$_k$, not all zero, such that:
+    \begin{center}
+        t$_1$a$_1$ + t$_2$a$_2$ + ... + t$_k$a$_k$ = 0
+    \end{center}
+    Otherwise, they are \textbf{linearly independent}.\\
+    This means that, if a$_1$, a$_2$, ..., a$_k$ are linearly independent, then we can write one of them as a linear combination of the others one
+\end{defBox}
+\noindent
+This peculiarity is fundamental in cryptography, indeed, for example, in the case of the \textbf{LWE problem}, we have a system of linear equations, and the security of the scheme relies on the fact that these equations are linearly independent, thus we cannot solve them easily by simplify them one with the other much simpler.
+\medskip
+
+\noindent
+\textbf{Example:}\\
+Let us consider a$_1$ = (1, 0, -1, 1), a$_2$ = (2, 1, 0, -1), a$_3$ = (1, -1, -3, 4), a$_4$ = (2, 5, 0, -1).For instance, we have that a$_1$, a$_2$ and a$_3$ are linearly independent, while a$_4$ is linearly dependent on the others. \\
+So:
+\begin{center}
+    3a$_1$ - a$_3$ - a$_4$ = 0
+\end{center}
+\noindent
+and
+\begin{center}
+    a$_4$ = 3a$_1$ - a$_3$
+\end{center}
+
+\noindent
+On the other hand, a$_1$, a$_2$ and a$_4$ are linearly independent, because:
+\begin{center}
+    xa$_1$ + ya$_2$ + za$_4$ = (x + 2y + 2z, y + 5z, -x, x - y - z) = (0, 0, 0, 0)
+\end{center}
+\noindent
+if and only if x = y = z = 0, thus they are linearly independent.
+
+
+
+\subsection{Lines}
+A \textbf{line} in $\mathbb{R}^n$ can be defined as the set of points that can be expressed as a linear combination of a fixed point and a direction vector.\\
+Considering a line in $\mathbb{R}^2$, it is a subset of $\mathbb{R}^2$ that can be expressed as:
+\begin{center}
+    y = mx + q with m, q $\in \mathbb{R}$
+\end{center}
+\medskip
+
+\noindent
+A linear can be also described in a parametric form as:
+\begin{center}
+    \[
+    \begin{cases}
+    x= tv_1 + x_A \\
+    y= tv_2 + y_A
+    \end{cases}
+    \]
+\end{center}
+\noindent
+This is the line through the point A = (x$_A$, y$_A$) and with direction the vector v = (v$_1$, v$_2$).
+
+\subsubsection*{Linear objects in higher dimensions}
+Similarly, in $\mathbb{R}^3$, we have the following linear object:
+\begin{itemize}
+    \item \textbf{Point/vectors}
+    \item \textbf{Lines} --> described by two linear equations   \[
+    \begin{cases}
+    ax + by + cz + d =0 \\
+    a^ix + b^iy + c^iz + d^i =0
+    \end{cases}
+    \]
+
+    \item \textbf{Planes} --> described by one linear equation $ax + by + cz + d =0$
+\end{itemize}
+
+\noindent
+These are only some of the linear objects, and we can also consider higher-dimensional linear objects.
+
+\subsection{Matrix}
+A \textbf{matrix} is a rectangular array of numbers, symbols, or expressions, arranged in rows and columns.\\
+Formally:
+\begin{defBox}{Matrix}
+    GGiven m,n $\in \mathbb{N}$, a matrix A of size m x n is a table of $mn$ real numbers, arranged in m rows and n columns.
+     \begin{center}
+        \[
+        A =
+        \begin{pmatrix}
+        a_{11} & a_{12} & \cdots & a_{1n} \\
+        a_{21} & a_{22} & \cdots & a_{2n} \\
+        \vdots & \vdots & \ddots & \vdots \\
+        a_{m1} & a_{m2} & \cdots & a_{mn}
+        \end{pmatrix}
+        \]
+    \end{center}
+    \noindent
+    Where a$_{ij} \in \mathbb{R}$ for all i = 1, 2, ..., m and j = 1, 2, ..., n.
+\end{defBox}
+
+\noindent
+Sometimes, we write matrix using the following notation: $A = (a_{ij})$.
+\bigskip
+
+\noindent
+\textbf{Classification:}\\
+\begin{itemize}
+    \item \textbf{Square matrix}: if m = n
+    \item \textbf{Row vector}: if m = 1, so $\mathbb{R}^{1\times n}$
+    \item \textbf{Column vector}: if n = 1, so $\mathbb{R}^{m \times 1}$
+\end{itemize}
+\bigskip
+
+\noindent
+\textbf{Operations on matrices:}\\
+\begin{itemize}
+    \item \textbf{Multiplication by a scalar:} tA = (ta$_{ij}$) for t $\in \mathbb{R}$ and A $\in \mathbb{R}^{m \times n}$
+    \item \textbf{Sum:} A + B = (a$_{ij}$ + b$_{ij}$) for A, B $\in \mathbb{R}^{m \times n}$
+    \item \textbf{Transpose:} A$^T$ = (a$_{ji}$) for A $\in \mathbb{R}^{m \times n}$, obteined by swapping rows and columns
+    \item \textbf{Product:} AB = (c$_{ij}$) $\in \mathbb{R}^{m \times r}$, for all A $\in \mathbb{R}^{m \times n}$ and B $\in \mathbb{R}^{n \times r}$, where the elements c$_{ij}$ is obteined by performing the dot product between the i-th row of A and the j-th column of B
+\end{itemize}
+
+\noindent
+\textbf{Example:}\\
+Let A = $\begin{pmatrix}
+    1 & 2 & 3 \\
+    0 & 1 & -1
+\end{pmatrix} \in \mathbb{R}^{2 \times 3}$ 
+and B = $\begin{pmatrix}
+    2 & 0 \\ 
+    1 & 1 \\ 
+    -1 & 3 \\ 
+\end{pmatrix} \in \mathbb{R}^{3 \times 2}$
+\medskip
+
+\noindent
+Then AB = $\begin{pmatrix} 
+    1 & 11 \\
+    2 & -2
+\end{pmatrix} \in \mathbb{R}^{2 \times 2}$, 
+BA = $\begin{pmatrix}
+    2 & 4 & 6 \\
+    1 & 3 & 2 \\
+    -1 & 1 & -6 
+\end{pmatrix} \in \mathbb{R}^{3 \times 3}$ 
+\bigskip
+
+\noindent
+Given C = $\begin{pmatrix}
+    5 & \sqrt{2} & \frac{1}{2} & 0\\
+    -1 & 2 & \pi & -3
+\end{pmatrix} \in \mathbb{R}^{2 \times 4}$, its trasponse is 
+C$^T$ = $\begin{pmatrix}
+    5 & -1 \\ 
+    \sqrt{2} & 2 \\ 
+    \frac{1}{2} & \phi \\ 
+    0 & -3
+\end{pmatrix} \in \mathbb{R}^{4 \times 2}$.
+
+\begin{defBox}{Identity matrix}
+    aThe identity matrix I$_n$ of size n x n is the square matrix with 1's on the main diagonal and 0's elsewhere.
+     \begin{center}
+        \[
+        I_n =
+        \begin{pmatrix}
+        1 & 0 & \cdots & 0 \\
+        0 & 1 & \cdots & 0 \\
+        \vdots & \vdots & \ddots & \vdots \\
+        0 & 0 & \cdots & 1
+        \end{pmatrix}
+        \]
+    \end{center}
+\end{defBox}
+
+\subsubsection* {Important notions}
+The \textbf{determinant} of a square matrix can be evaluted recursively.\\
+Given a 2 x 2 matrix A = $\begin{pmatrix}
+    a & b \\
+    c & d
+\end{pmatrix}$, its determinant is det(A) = ad - bc.\\
+Given a 3 x 3 matrix B = $\begin{pmatrix}
+    a & b & c \\
+    d & e & f \\
+    g & h & i
+\end{pmatrix}$, \\ its determinant is det(B) = a det $\begin{pmatrix}
+    e & f \\
+    h & i
+\end{pmatrix}$ - b det $\begin{pmatrix}
+    d & f \\
+    g & i
+\end{pmatrix}$ + c det $\begin{pmatrix}
+    d & e \\
+    g & h
+\end{pmatrix}$ = a(ei - fh) - b(di - fg) + c(dh - eg).\\
+\bigskip 
+
+\noindent
+\textbf{Example:}\\
+Given A = $\begin{pmatrix}
+    2 & 0 & 1 & -3\\
+    1 & 5 & -1 & 2\\
+    4 & 1 & -2 & 7\\
+    0 & 0 & 2 & 0
+\end{pmatrix}$ then,
+det(A) = -2 det $\begin{pmatrix}
+    2 & 0 & -3 \\
+    1 & 5 & 2 \\
+    4 & 1 & 7
+\end{pmatrix}$ and \\
+det $\begin{pmatrix}
+    2 & 0 & -3 \\
+    1 & 5 & 2 \\
+    4 & 1 & 7
+\end{pmatrix}$ = 2 det $\begin{pmatrix}
+    5 & 2 \\
+    1 & 7
+\end{pmatrix}$ - 3 det $\begin{pmatrix}
+    1 & 5 \\
+    4 & 1
+\end{pmatrix}$ 
+\bigskip
+
+\noindent
+The \textbf{trace} of a square matrix A = (a$_{ij}$) is the sum of the elements on the main diagonal, i.e., tr(A) = a$_{11}$ + a$_{22}$ + ... + a$_{nn}$.
+\medskip
+
+\noindent
+\textbf{Example:}\\
+Given 
+\[
+A = \begin{pmatrix}
+2 & -1 & 0\\
+4 & 3 & 5\\
+1 & 2 & -2
+\end{pmatrix}
+\]
+the trace is
+\[
+\operatorname{tr}(A) = 2 + 3 + (-2) = 3.
+\]
+
+\subsubsection{Matrix multiplication algorithms}
+The standard algorithm for multiplying two n x n matrices has a time complexity of O(n$^3$).
+\begin{algorithm}
+\caption{Schoolbook Matrix Multiplication}
+\begin{algorithmic}[1]
+
+\Require Matrices $A \in \mathbb{R}^{n \times m}$, $B \in \mathbb{R}^{m \times p}$
+\Ensure Matrix $C \in \mathbb{R}^{n \times p}$
+
+\State Initialize $C$ as a zero matrix
+
+\For{$i = 1$ to $n$}
+    \For{$j = 1$ to $p$}
+        \State $sum \gets 0$
+        \For{$k = 1$ to $m$}
+            \State $sum \gets sum + A_{ik} \cdot B_{kj}$
+        \EndFor
+        \State $C_{ij} \gets sum$
+    \EndFor
+\EndFor
+
+\State \Return $C$
+
+\end{algorithmic}
+\end{algorithm}
+
+\noindent
+However, other algorithms exist:
+\begin{itemize}
+    \item \textbf{Strassen's algorithm} reduces the time complexity to O(n$^{2.807}$).\\
+    \item \textbf{Coppersmith-Winograd algorithm} further reduces the time complexity to O(n$^{2.376}$).\\
+    \item \textbf{Optimized CW-like algorithms} have been developed, achieving time complexities of O(n$^{2.373}$) 
+\end{itemize}
+
+
+\subsubsection{Matrix inversion algorithms}
+A matrix is invertible if its determinant is non-zero.\\
+The standard algorithm for inverting an n x n matrix (\textbf{Gauss-Jordan elimination})has a time complexity of O(n$^3$).
+
+\begin{algorithm}
+\caption{Gauss-Jordan}
+\begin{algorithmic}[1]
+
+\State Swapping two rows
+\State Multiplying a row by a non-zero scalar
+\State Adding a multiple of one row to another row
+
+\end{algorithmic}
+
+\end{algorithm}
+
+\noindent
+However, other algorithms exist:
+\begin{itemize}
+    \item \textbf{Strassen's algorithm} can be adapted for matrix inversion, achieving a time complexity of O(n$^{2.807}$).\\
+    \item \textbf{Coppersmith-Winograd algorithm} can also be adapted for matrix inversion, achieving a time complexity of O(n$^{2.376}$).\\
+    \item \textbf{Optimized CW-like algorithms} have been developed for matrix inversion, achieving time complexities of O(n$^{2.373}$).
+
+\end{itemize}
+\bigskip
+
+\noindent
+Professor Murru underlines that these algorithms are indeed polynomial-time. However, this can be misleading: in this context, the complexity is expressed in terms of the matrix dimension $n$, not in terms of the bit-length of the input. 
+\medskip
+
+\noindent
+When considering the actual input size (i.e., the number of bits needed to represent the matrices), the complexity may become much larger in practice. Therefore, although these algorithms are polynomial in $n$, they are not necessarily efficient in the sense typically considered in cryptography, where efficiency is measured with respect to the bit-size of the input.
+
+\subsubsection{Determinant algorithms}
+The determinant of an n x n matrix can be computed using the standard algorithm (\textbf{Laplace expansion}) with a time complexity of O(n!).\\
+However, more efficient algorithms exist:
+\begin{itemize}
+    \item \textbf{LU decomposition} can be used to compute the determinant in O(n$^3$) time.
+    \item \textbf{Division-free algorithms} can compute the determinant in O(n$^3$) time without performing any division, which is particularly useful for integer matrices.
+    \item \textbf{Fast matrix multiplication} can compute the determinant in O(n$^{2.373}$) time, leveraging fast matrix multiplication techniques.
+    \item \textbf{Bareiss algorithm} is an efficient method for computing the determinant with a time complexity of O(n$^3$) and is particularly useful for integer matrices, as it avoids intermediate fractions.
+\end{itemize}
+
+\begin{algorithm}
+\caption{Bareiss Algorithm}
+\begin{algorithmic}[1]
+
+\State \textbf{Input:} $M$ --- an $n \times n$ matrix, with non-zero leading principal minors
+\State \textbf{Initialize:} $M_{0,0} \gets 1$
+
+\For{$k = 1$ to $n-1$}
+    \For{$i = k+1$ to $n$}
+        \For{$j = k+1$ to $n$}
+            \State $M_{i,j} \gets \dfrac{M_{i,j} M_{k,k} - M_{i,k} M_{k,j}}{M_{k-1,k-1}}$
+        \EndFor
+    \EndFor
+\EndFor
+
+\State \textbf{Output:} $M_{n,n}$ contains $\det(M)$
+
+\end{algorithmic}
+\end{algorithm}
+
+
+%%less 19/03    
+
+\subsection{Vector Space}
+
+\begin{defBox}{vector space}
+    aA \textbf{Vector space} over the real (or complex) numbers is a set V where there exists an operation between the elements of V that we denote by + and an operation between elements of V and elements of $\mathbb{R}$ (or $\mathbb{C}$) called multiplication by scalar, having good properties:
+
+    \begin{itemize}
+        \item + must be associative, there exists the identity, there exists the inverse, and it must be commutative
+        \item Scalar multiplication must be associative and distributive with respect to the sum
+    \end{itemize}
+\end{defBox}
+\medskip
+
+\noindent
+\textbf{Remark:}\\
+The set $\mathbb{R}^n$ of vectors is a vector space over $\mathbb{R}$. The set $\mathbb{R}^{m \times n}$ of matrices is a vector space over $\mathbb{R}$, but we can also consider the set of matrices as a vector space over $\mathbb{C}$.
+\bigskip
+
+\noindent
+Be careful: $\mathbb{R}^n$ is a vector space over $\mathbb{C}$, but it is not a vector space over $\mathbb{F}_q$, where $\mathbb{F}_q$ is a finite field with q elements, because the scalar multiplication is not defined for all scalars in $\mathbb{F}_q$.\medskip
+
+\noindent
+Consider, e.g., $\mathbb{R}^3$ and $\mathbb{F}_5$ and let see that $\mathbb{R}^3$ is not a vector space over $\mathbb{F}_5$.\\
+Indeed, if we take the "scalar" 0$ \in \mathbb{F}_5$, and a non-zero vector v $ \in \mathbb{R}^3$ (i.e. v = (1, 2, 3)), then we have that 0$\cdot$ v = (0, 0, 0) and since 5=0 in $\mathbb{F}_5$, we have that 5$\cdot$ v = 0
+\smallskip
+
+\noindent
+On the other hand, we can computer 5 $\cdot$ v also in the following way: 5$\cdot$ v = (1 + 1 + 1 + 1 + 1)v = v + v + v + v + v = (1, 2, 3) + ...+ (1, 2, 3) = (5, 10, 15) $\neq$ (0, 0, 0) $\in \mathbb{R}^3$.\\
+because 5,10,15 are elements of $\mathbb{R}$, are not 0.
+\bigskip
+
+\noindent
+Similarly, we can consider $\mathbb{F}_q^n$ as a vector space over $\mathbb{F}_q$, but we cannot consider $\mathbb{F}_q^n$ as a vector space over $\mathbb{R}$, because the scalar multiplication is not defined for all scalars in $\mathbb{R}$.\\
+The main reason (without formal proof) is that:
+\begin{itemize}
+    \item $\mathbb{F}_q, q = p^k$ where p is primem has characteristic p, wich means that $\forall \alpha \in \mathbb{F}_q$, we have $\alpha + ....+ \alpha$ (p times) = 0
+    \item $\mathbb{R}$ has characteristic 0, wich means that $\forall \alpha \in \mathbb{R} \setminus \{0\}, \alpha+...+ \alpha$ is always different from 0
+\end{itemize}
+
+\subsubsection{Basis}
+In a vector space, there always exist a basis.
+
+\begin{defBox}{Basis}
+    aA basis is a set of vector that generate all the other ones by means of their linear combination.
+\end{defBox}
+
+\noindent
+The vectors of a basis are linearly independent and they are set of generators of the vector space.\\
+The number of vectors in a basis is called the \textbf{dimension} of the vector space.
+\medskip
+
+\noindent
+\textbf{Example}\\
+In $\mathbb{R}^3$, the standard basis is given by the vectors e$_1$ = (1, 0, 0), e$_2$ = (0, 1, 0) and e$_3$ = (0, 0, 1).
+
+\subsubsection{Linear map}
+A \textbf{linear map} (or linear transformation) is a function between two vector spaces that preserves the operations of vector addition and scalar multiplication.
+\begin{center}
+    \[
+    f: V \rightarrow W
+    \]
+\end{center}
+
+\noindent
+where V and W are vector spaces , susch that for all u, v $\in V$ and t $\in \mathbb{R}$ (or $\mathbb{C}$), we have:
+\begin{center}
+    \[
+    f(v_1 + v_2) = f(v_1) + f(v_2), f(kv) = kf(v)
+    \]
+\end{center}
+
+\noindent
+A linear map can be represented by a matrix f(v) = Av, where A is a matrix and v is a vector.
+\medskip
+
+\noindent
+\textbf{Example:}\\
+Consider f: $\mathbb{R}^2 \rightarrow \mathbb{R}^3$, such that
+\begin{center}
+    \[
+    f(v) = w, w = (v_1 + v_2, v_3, 2v_4 - v_1, v_2 + 3v_3)
+    \]
+\end{center}
+\noindent
+This is a linear map, and it can be represented by the following matrix:
+\begin{center}
+    \[
+    A = \begin{pmatrix}
+    1 & 1 & 0 & 0 \\
+    0 & 0 & 1 & 0 \\
+    -1 & 0 & 0 & 1 \\
+    0 & 1 & 3 & 0
+    \end{pmatrix}
+    \]
+\end{center}
+
+\subsubsection {Eigenvalues and eigenvectors}
+Given a matrix A, or equivalently a linear map $f: V \rightarrow V$, a non-zero vector v is called an \textbf{eigenvector} of A if there exists a scalar $\lambda$ such that Av = $\lambda$v.\\
+The scalar $\lambda$ is called the \textbf{eigenvalue} corresponding to the eigenvector v.
+\medskip
+
+\noindent
+To compute the eigenvalues and eigenvectors of a matrix A, we can solve the characteristic equation det(A - $\lambda$I) = 0, where I is the identity matrix.\\
+In this way, we can find the eigenvalues $\lambda$, and then we can find the corresponding eigenvectors by solving the equation (A - $\lambda$I)v = 0 for each eigenvalue $\lambda$.
+
+
+\subsubsection{Tensor product}
+The \textbf{tensor product} is a way to combine two vector spaces V and W into a new vector space V $\otimes$ W.
+
+\begin{defBox}{Tensor product}
+    aGiven two matrices A $\in \mathbb{R}^{m \times n}$ and B $\in \mathbb{R}^{p \times q}$, then their \textbf{Kronocker product} is:
+    \begin{center}
+        \[
+        A \otimes B =
+        \begin{pmatrix}
+        a_{11}B & a_{12}B & \cdots & a_{1n}B \\
+        a_{21}B & a_{22}B & \cdots & a_{2n}B \\
+        \vdots & \vdots & \ddots & \vdots \\
+        a_{m1}B & a_{m2}B & \cdots & a_{mn}B
+        \end{pmatrix}
+        \]
+    \end{center}
+    
+\end{defBox}

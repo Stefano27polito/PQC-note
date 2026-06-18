@@ -1,0 +1,363 @@
+\section{Introduction to Multivariate Systems}
+NIST opened a call for signature-scheme proposals. The competition is currently in its third round, and nine finalists have been selected.\\
+Four of the nine finalists are based on multivariate systems:
+\begin{itemize}
+    \item MAYO
+    \item UOV
+    \item QR-UOV
+    \item SNOVA
+\end{itemize}
+
+\subsubsection*{Recap: classes of complexity}
+\begin{defBox}{P problems}
+    TThe class \textbf{P} is the class of decision problems that are decidable in polynomial time by a deterministic Turing machine.
+\end{defBox}
+
+\noindent
+In other words, a problem is in \textbf{P} if there exists an algorithm that can solve any instance of the problem in time that is polynomial with respect to the size of the input.\\
+
+\begin{defBox}{NP problems}
+    TThe class \textbf{NP} is the class of decision problems for which a given solution can be verified in polynomial time by a deterministic Turing machine.
+\end{defBox}
+
+
+\noindent
+In other words, a problem is in \textbf{NP} if there exists an algorithm that can verify whether a given solution to the problem is correct in polynomial time with respect to the size of the input.\\
+
+\begin{defBox}{NP-hard problems}
+    aA problem is \textbf{NP-hard} if every problem in NP can be reduced to it in polynomial time.
+\end{defBox}
+\noindent
+In other words, a problem is \textbf{NP-hard} if it is at least as hard as the hardest problems in NP. If a problem is NP-hard, it means that if we could solve it efficiently, we could solve all problems in NP efficiently as well.\\
+
+\begin{defBox}{NP-complete problems}
+    aA problem is \textbf{NP-complete} if it is both in NP and NP-hard.
+\end{defBox}
+\noindent
+In other words, a problem is \textbf{NP-complete} if it is in NP and is as hard as the hardest problems in NP. If a problem is NP-complete, it means that if we could solve it efficiently, we could solve all problems in NP efficiently as well.
+\bigskip
+
+\noindent
+The question of whether \textbf{P} = \textbf{NP} is one of the most important open problems in computer science. \\
+It asks whether every problem that can be verified in polynomial time can also be solved in polynomial time. If \textbf{P} = \textbf{NP}, it would mean that all problems in NP can be solved efficiently, which would have profound implications for fields such as cryptography, optimization, and algorithm design. However, most experts believe that \textbf{P} $\neq$ \textbf{NP}, meaning that there are problems in NP that cannot be solved efficiently, even though their solutions can be verified efficiently.
+\vspace{0.5 cm}
+
+\noindent
+Many post-quantum cryptographic schemes are based on NP-complete problems.\\
+Under specific assumptions, Multivariate Polynomial Problems are NP-complete.
+
+\subsection{Multivariate Polynomial Problems}
+\begin{defBox}{Multivariate Polynomial Problem (MPP)}
+    aGiven $m$ polynomials of degree $d \geq 2$, $p_1, \ldots, p_m \in \mathbb{F}_q[x_1, \ldots, x_n]$, find a solution of the system
+    \[
+        \left\{
+        \begin{aligned}
+            &p_1(x_1, \ldots, x_n) &= 0\\
+            &p_2(x_1, \ldots, x_n) &= 0\\
+            &\vdots\\
+            &p_m(x_1, \ldots, x_n) &= 0
+        \end{aligned}
+        \right.
+    \]
+\end{defBox}
+\noindent
+In other words, the Multivariate Polynomial Problem (MPP) asks us to find a solution to a system composed of $m$ equations and $n$ unknowns.
+\medskip
+
+\noindent
+The particular case of the MPP where $m = 2$ and polynomials are of degree 2 is called the \textbf{MQ problem} (Multivariate Quadratic Problem).\\
+The MQ problem is NP-complete, and it is the most common case in multivariate cryptography.
+\medskip
+
+\noindent
+The choice to have only quadratic polynomials is motivated by the fact that solving a system of higher degree polynomials increase th complexity only polynomially.
+
+\subsection{Overview of Multivariate Cryptography}
+In multivariate cryptography, we can construcut both signature schemes and encryption schemes by exploiting the following idea:
+\medskip
+
+\noindent
+Given the evaluation map
+
+\begin{align*}
+    P: \mathbb{F}_q^n &\to \mathbb{F}_q^m\\
+    x= (x_1, \ldots, x_n) &\mapsto (p_1(x), \ldots, p_m(x))
+\end{align*}
+
+\noindent
+where $p_1, \ldots, p_m$\\
+and given $y = (y_1, \ldots, y_m) $, the difficult problem is to find a preimage $P^{-1}(y)$, i.e. a solution of the system, i.e an n-tuple $x = (x_1, \ldots, x_n)$ such that
+\begin{align*}
+    P(x_1, \ldots, x_n)= (y_1, \ldots, y_m)
+\end{align*}
+
+\noindent
+\textbf{Note:}\\
+Let $f : A \to B$ be a function and $y \in B$.
+A preimage of $y$ is an element $x \in A$ such that $f(x) = y$.
+\vspace*{2em}
+
+\noindent
+When we use this idea to construct a signature scheme we prefer to have $n < m$, so that the system is underdetermined and has many solutions.\\
+On the other hand, when we use this idea to construct an encryption scheme we prefer to have $n = m$, so that the system is square and has a unique solution.
+
+\subsubsection{Central Map}
+The general framework consists of a secret fuction called central map, that is
+\begin{align*}
+    F: \mathbb{F}_q^n &\to \mathbb{F}_q^m\\
+    x= (x_1, \ldots, x_n) &\mapsto (f_1(x_1, \ldots, x_n), \ldots, f_m(x_1, \ldots, x_n))
+\end{align*}
+
+\noindent
+and two secret affine transformations $S: \mathbb{F}_q^n \to \mathbb{F}_q^n$ and $T: \mathbb{F}_q^m \to \mathbb{F}_q^m$.\\
+These two functions can also be rapresented as matrices, and we can write $S \in \mathbb{F}_q^{n \times n}$ and $T \in \mathbb{F}_q^{m \times m}$.\\
+\bigskip
+
+\noindent
+The trapdoor is the information of the internal structure of the map $P$, called the public map, where $P$ is defined as:
+\begin{align*}
+    P = S \circ F \circ T
+\end{align*}
+\noindent
+That means starting from $x \in \mathbb{F}_q^n$, we first apply the transformation $T$ to get $T(x)$, then we apply the central map $F$ to get $F(T(x))$, and finally we apply the transformation $S$ to get $P(x) = S(F(T(x)))$.\\
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[>=Stealth, node distance=2.5cm, auto]
+    \node (A) {${\mathbb{F}}_q^{\,m}$};
+    \node (B) [right=of A] {${\mathbb{F}}_p^{\,m}$};
+    \node (C) [right=of B] {${\mathbb{F}}_q^{\,m}$};
+    \node (D) [right=of C] {${\mathbb{F}}_q^{\,m}$};
+
+    \draw[->] (A) -- node[above]{T} (B);
+    \draw[->] (B) -- node[above]{F} (C);
+    \draw[->] (C) -- node[above]{S} (D);
+    \draw[->, very thick, red, bend left=40, >={Stealth[scale=1.4]}] (A) to node[midway, below]{\large $P$} (D);
+\end{tikzpicture}
+\end{figure}
+
+\noindent
+The main and most used trapdoors for multivariate cryptographic schemes are:
+\begin{itemize}
+    \item Hidden Field Equations (HFE): the trapdoor information is that the public system of
+    quadratic polynomials arises from a single (secret) univariate polynomial over a finite field
+    extension $\mathbb{F}_{q^m}$.
+    \item Oil and Vinegar (OV): the trapdoor information is that the system of polynomials vanishes on a small (secret) subspace, called the Oil subspace
+\end{itemize}
+
+\subsubsection*{Example of MQ problem}
+Let us consider the system of 4 multivariate polynomials in $\mathbb{F}_2[x_1, x_2, x_3]$.
+\begin{equation*}
+    \left\{
+    \begin{array}{l}
+        x_1x_3 + x_2x_3 + x_1 + x_2 + x_3 = 0,\\
+        x_2x_3 + x_2 + 1 = 0,\\
+        x_1x_2 + x_1x_3 + x_2 + x_3 = 0,\\
+        x_1x_2 + x_2x_3 + x_1 = 0.
+    \end{array}
+    \right.
+\end{equation*}
+
+\noindent
+We can ignore the fact that the system is quadratic and solve it as a linear system by introducing new variables $y_i$ as:
+\begin{align*}
+    y_1 &= x_1, y_2 = x_2, y_3 = x_3, \\
+    y_4 &= x_1x_2, y_5 = x_1x_3, y_6 = x_2x_3.
+\end{align*}
+The system can be rewritten as:
+\begin{equation*}
+    \left\{
+    \begin{array}{l}
+       y_1 + y_3 + y_5 + y_6 = 0, \\
+       y_2 + y_6 + 1 = 0, \\
+       y_2 + y_3 + y_4 + y_5 = 0, \\
+       y_1 + y_4 + y_6 = 0.
+    \end{array}
+    \right.
+\end{equation*}
+\noindent
+The complete matrix of the system is:
+\[
+\left(
+\begin{array}{cccccc|c}
+1 & 0 & 1 & 0 & 1 & 1 & 0 \\
+0 & 1 & 0 & 0 & 0 & 1 & 1 \\
+0 & 1 & 1 & 1 & 1 & 0 & 0 \\
+1 & 0 & 0 & 1 & 0 & 1 & 0
+\end{array}
+\right)
+\longrightarrow
+\left(
+\begin{array}{cccccc|c}
+1 & 0 & 0 & 1 & 0 & 1 & 0 \\
+0 & 1 & 0 & 0 & 0 & 1 & 1 \\
+0 & 0 & 1 & 1 & 1 & 1 & 1 \\
+0 & 0 & 0 & 0 & 0 & 0 & 0
+\end{array}
+\right)
+\]
+
+\noindent
+so that reduced system is:
+\begin{equation*}
+    \left\{
+    \begin{array}{l}
+       y_1 =  y_4 + y_6, \\
+       y_2 = y_6 + 1, \\
+       y_3 = y_4 + y_5 + y_6 + 1, \\
+\end{array}
+    \right.
+\end{equation*}
+\vspace{0.4 cm}
+
+\noindent
+The 8 solutions $(y_1,y_2,y_3,y_4,y_5,y_6)$ of the linearized system are:
+\[
+\begin{array}{cccc}
+(0,1,1,0,0,0), &
+(1,0,0,0,0,1), &
+(0,1,0,0,1,0), &
+(1,0,1,0,1,1), \\[4pt]
+(1,1,0,1,0,0), &
+(0,0,1,1,0,1), &
+(1,1,1,1,1,0), &
+(0,0,0,1,1,1).
+\end{array}
+\]
+\medskip
+
+\noindent
+The problem is that they are not all solutions of the original system in the variables
+$x_1,x_2,x_3$.\\
+The only actual solution is
+\[
+(1,1,0,1,0,0).
+\]
+\bigskip
+
+\noindent
+For example, the solution
+\[
+(y_1,y_2,y_3,y_4,y_5,y_6)=(0,1,1,0,0,0)
+\]
+corresponds to:
+\[
+x_2=1,\qquad x_3=1,\qquad x_2x_3=0,
+\]
+which is clearly not possible.
+
+\bigskip
+
+\noindent
+The step from the solution of the linearized system to the solution of the actual system gives rise, in general, to an exponential number of parasitic solutions.
+
+\subsubsection{Solving Multivariate Systems}
+In a quadratic system over the variables \(x_1,\dots,x_n\), linearization introduces one new variable \(y_i\) for each quadratic monomial. The number of quadratic monomials in \(n\) variables is
+\[
+t=\frac{n(n+1)}{2}.
+\]
+
+\noindent
+More generally, the number of monomials of degree \(d\) in \(n\) variables is
+\[
+\binom{n+d-1}{d}.
+\]
+
+\noindent
+After linearization, the original quadratic system is transformed into a linear system in \(t\) variables. If the system contains \(r\) linearly independent equations, then by linear algebra the number of free variables is
+\[
+t-r.
+\]
+
+\noindent
+Over a finite field \(\mathbb F_q\), each free variable can assume \(q\) possible values. Therefore, the linearized system has
+\[
+q^{t-r}
+\]
+solutions.
+\medskip
+
+\noindent
+In the quadratic case, since
+\[
+t=\frac{n(n+1)}{2},
+\]
+the number of solutions of the linearized system is
+\[
+q^{\frac{n(n+1)}{2}-r}.
+\]
+
+\noindent
+The key issue is that many of these solutions are not solutions of the original quadratic system. They are called \textit{parasitic solutions}.\\
+Usually, the number of actual solutions of the original system is small, while the number of solutions introduced by linearization can be exponential.
+\medskip
+
+\noindent
+Thus, effective methods for solving MQ instances try to increase the number \(r\) of independent equations, i.e., the rank of the linearized system, in order to reduce
+\[
+q^{t-r}
+\]
+and therefore reduce the number of parasitic solutions.
+
+\subsubsection{Overview of Encryption and Signature}
+Multivariate cryptosystems are based on polynomial maps over a finite field.\\ 
+The public key is usually a system of multivariate polynomials
+\[
+P=(p_1,\dots,p_m),
+\]
+which maps an input vector
+\[
+M=(M_1,\dots,M_n)
+\]
+to an output vector
+\[
+P(M)=(C_1,\dots,C_m).
+\]
+
+\noindent
+In an encryption setting, Alice computes
+\[
+(C_1,\dots,C_m)=P(M_1,\dots,M_n)
+\]
+and sends the ciphertext \(C=(C_1,\dots,C_m)\) to Bob. \\
+Bob can efficiently recover the original message because he knows a secret trapdoor that allows him to solve
+\[
+P(x_1,\dots,x_n)=(C_1,\dots,C_m).
+\]
+Without this trapdoor, solving the corresponding multivariate polynomial system is assumed to be hard.
+
+\bigskip
+
+\noindent
+For digital signatures, a signature scheme is described by three algorithms:
+\begin{itemize}
+    \item \textbf{KeyGeneration}$(\varepsilon)$: given a security parameter \(\varepsilon\), it generates a private key \(k\) and a public key \(P\).
+    \item \textbf{Signature}$(M,k)$: the message \(M\) is signed using the private key \(k\), producing a signature \(s\).
+    \item \textbf{Verification}$(M,s,P)$: using the public key \(P\), anyone can verify whether \(s\) is a valid signature for \(M\).
+\end{itemize}
+
+\noindent
+In the multivariate setting, signing can be interpreted as finding a preimage of the hash of the message under the public polynomial map. \\
+More precisely, given a message \(M\), we first compute
+\[
+H(M).
+\]
+Then, using the secret trapdoor information, the signer efficiently finds a vector
+\[
+s \in \mathbb F_q^m \text{  s. t.  } P(s)=H(M)
+\]
+
+\noindent
+The pair \((M,s)\) is sent as the signed message.
+\medskip
+
+\noindent
+Verification consists in checking whether
+\[
+P(s)=H(M).
+\]
+Finding such a preimage
+\[
+s=P^{-1}(H(M))
+\]
+without the secret trapdoor is assumed to be computationally hard.

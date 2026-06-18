@@ -1,0 +1,115 @@
+\documentclass[a4paper,12pt]{article} % Use the standard "article" class
+\usepackage{latex-templates/styles/polito}      % Load the custom package for Politecnico di Torino - Cybersecurity
+
+% Additional necessary packages
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage[dvipsnames,table]{xcolor}  % Extended color options
+\usepackage{graphicx}            % Include images
+\usepackage{subcaption}          % Sub-figures and captions
+\usepackage{booktabs}            % Enhanced table formatting
+\usepackage{amsmath, amssymb}    % Math symbols and environments
+\usepackage{wrapfig}             % Text wrapping around figures
+\usepackage{soul}                % Highlighting text
+\usepackage{float}               % Float control for figures/tables
+\usepackage{tcolorbox}           % Colored boxes
+\usepackage{textgreek}           % Greek letters in text mode
+\usepackage{tikz}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{mathtools}
+\usepackage{cancel}
+\usepackage{colonequals}
+
+\usetikzlibrary{positioning, arrows.meta}
+
+\newcommand{\circleast}{\tikz[baseline=(X.base)] \node[draw,circle,inner sep=0.7pt] (X) {$*$};}
+
+\newcommand{\vect}[1]{\underline{#1}}
+
+\graphicspath{{./images/}} % Path for images
+%New command for defBox or theorem box :
+\tcbuselibrary{theorems}
+
+% Define the custom definition box mapped to \begin{defBox}{<title>}
+\newtcbtheorem[]{defBox}{}%
+{colback=green!5,colframe=green!35!black,fonttitle=\bfseries}{th}
+
+% THEOREM BOX (Blue)
+\newtcbtheorem[]{thmBox}{}%
+{colback=blue!5,colframe=blue!60!black,fonttitle=\bfseries}{thm}
+
+% PROPOSITION BOX (Purple)
+\newtcbtheorem[]{propBox}{}%
+{colback=violet!5,colframe=violet!60!black,fonttitle=\bfseries}{prop}
+
+% General document information
+\title{Lecture Notes of \\Post-Quantum Cryptography}
+\degree{Master's Degree in Cybersecurity}
+\author{Stefano Pietro Sternativo}
+\professor{Nadir Murru}
+\academicyear{2025/2026}
+\date{\today}
+
+\begin{document}
+
+\maketitlecustom % Custom command to create the personalized title page
+
+\tableofcontents % Generate the table of contents
+\newpage
+
+\section*{Disclaimer}
+\addcontentsline{toc}{section}{Disclaimer}
+
+\subsection*{Notes on the handout}
+These notes were produced to support the Post-Quantum Cryptography course and are intended solely as a personal study and summary aid.\
+They do not replace in any way Professor Murru's teaching activity, the lectures, the exercises done in class, or any official course material.\
+Although I have tried to keep the text as accurate as possible, I assume no responsibility for any inaccuracies, typos, omissions, or incorrect interpretations.
+
+\medskip
+\noindent
+I remain available for any clarification or reports at \texttt{s346910@studenti.polito.it} or on Telegram \texttt{@Spiz27}.
+
+\subsection*{Custom Boxes}
+The document defines a few custom environments based on \texttt{tcolorbox}:
+\begin{itemize}
+	\item \texttt{defBox}: green box for definitions and theoretical remarks;
+	\item \texttt{thmBox}: blue box for theorems and formal results;
+	\item \texttt{propBox}: violet box for propositions and observations.
+\end{itemize}
+
+\noindent
+Typical usage is the following:
+\begin{verbatim}
+\begin{defBox}{Titolo}
+Text of the definition.
+\end{defBox}
+
+\begin{thmBox}{Titolo}
+Text of the theorem.
+\end{thmBox}
+
+\begin{propBox}{Titolo}{label}
+Text of the proposition.
+\end{propBox}
+\end{verbatim}
+
+\noindent
+For the \texttt{propBox} environment, two brace arguments are required: the first is the title, the second is the internal label. Even if one of them is empty, the syntax must still be written as \texttt{\{\}\{\}} to avoid compilation errors.
+
+\def\slides{slides/sample-2.pdf}
+\include{sections/section01}
+
+\def\slides{slides/sample-2.pdf}
+\include{sections/section02}
+\include{sections/section03}
+\include{sections/section04}
+\include{sections/section05}
+\include{sections/section06}
+\include{sections/section07}
+\include{sections/section08}
+\include{sections/section09}
+
+
+
+\end{document}

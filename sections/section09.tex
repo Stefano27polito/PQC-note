@@ -1,0 +1,985 @@
+\section{Multivariate Cryptography}
+There are several crypto schemes based on multivariate idea.\\
+One of the most important one is the \textbf{Oil and Vinegar} scheme, which is a signature scheme that made the basis for the most important signature schemes in the multivariate world.
+
+\subsection{Oil and Vinegar}
+It was proposed by Patarin in 1997.
+\medskip
+
+\noindent
+The idea is to create a trapdoor for the central map of a
+multivariate quadratic scheme by separating the variables $x_1, \ldots, x_n$ in two different sets of variables:
+\begin{itemize}
+    \item The \underline{vinegar} variables $x_1, \ldots, x_v$;
+    \item The \underline{oil} variables $x_{v+1}, \ldots, x_{v+o}$.
+\end{itemize}
+
+\noindent
+There are $v$ vinegar variables and $o$ oil variables and a total of $n = o + v$
+variables.\\
+The original choice of Patarin was $o = v$, i.e. the same number of oil and vinegar variables, and this is now referred as \textbf{Balanced Oil and Vinegar}.
+
+\subsubsection{Central Maps}
+For semplicity, let us define two sets:
+\begin{align*}
+    V & = \{1, \ldots, v\} \text{\textit{ Vinegar variables }} \\
+    O & = \{v+1, \ldots, n\} \text{\textit{ Oil variables }}
+\end{align*}
+\noindent
+where $n = o + v$.
+\medskip
+
+\noindent
+The \textit{secret} central map is the system of polynomials:
+\begin{align*}
+    F & = (f_1(x_1, \ldots, x_n), \ldots, f_o(x_1, \ldots, x_n)) \\
+\end{align*}
+
+\noindent
+where each polynomial $f_i$ has the form:
+\begin{equation*}
+    f_i(x) = \sum_{j,k\in V} a^{(i)}_{j,k}\,x_jx_k
+           + \sum_{\substack{j\in V\\k\in O}} b^{(i)}_{j,k}\,x_jx_k
+           + \sum_{j\in V\cup O} c^{(i)}_j\,x_j + d^{(i)},
+\end{equation*}
+for all $i=1,\dots,o$ and for $x=(x_1,\dots,x_n)$.
+\medskip
+
+\noindent
+\textbf{Note:}\\
+There is no product of two oil variables in the central map, which is the key point of the scheme, because if we fix the vinegar variables, the system becomes linear in the oil variables and can be easily solved.\\
+In fact, the polynomials $f_i(x_1, \ldots, x_n), \text{ for } i=1,\dots,o$ have only:
+\begin{itemize}
+    \item Linear terms in $x_j$, with $j=1,\dots,n$;
+    \item product of two vinegar variables $x_jx_k$, with $j,k=1,\dots,v$;
+    \item product of one vinegar variable and one oil variable $x_jx_k$, with $j=1,\dots,v$ and $k=v+1,\dots,n$.
+\end{itemize}
+\bigskip    
+
+\noindent
+So, the central map is a fuction:
+\begin{align*}
+    F: \mathbb{F}_q^{v+o} & \to \mathbb{F}_q^o
+\end{align*}
+\medskip
+formed by $o$ polynomials of degree 2 in $n$ variables.
+\vspace{1.5 cm}
+
+\noindent
+The \textit{public} multivariate quadratic map is:
+\begin{align*}
+    P = F \circ T
+\end{align*}
+\noindent
+where $T$ is a secret invertible affine transformation map of $\mathbb{F}_q$
+\medskip
+
+\noindent
+In this case, we use only the map $T$, without the map $S$, because any linear transformation of OV polynomials is still an OV polynomial.\\
+Even if we use a map $S$, it would be useless, because the structure of the central map is preserved by any linear transformation, so it would not add any security to the scheme.
+
+\subsubsection{key generation}
+\begin{algorithm}
+\begin{algorithmic}[1]
+    \State We define the $o$ polynomials $f_i(x_1,\dots,x_n)$, $i=1,\dots,o$, as in (1) by choosing the coefficients $a^{(i)}_{j,k}$, $b^{(i)}_{j,k}$, $c^{(i)}_j$ and $d^{(i)}$ uniformly at random in $\mathbb{F}_q$.
+    \State We choose uniformly at random an affine invertible map $T:\mathbb{F}_q^n \to \mathbb{F}_q^n$ (or a matrix $T\in\mathbb{F}_q^{n\times n}$).
+\end{algorithmic}
+\end{algorithm}
+
+
+
+\noindent
+\begin{itemize}
+    \item \textbf{Public key:} The composition $P = F \circ T$, that is a quadratic polynomial system
+    \item \textbf{Private key:} The two maps $T \in GL_n(\mathbb{F}_q)$ and $F = (f_1, \ldots, f_o)$.
+\end{itemize}
+
+\subsubsection{Invert F}
+\noindent
+The knowledge of the central map \(F=(f_1,\dots,f_o)\), i.e. of the coefficients
+\(a_{j,k}^{(i)}, b_{j,k}^{(i)}, c_j^{(i)}, c_k^{(i)}, d^{(i)}\), allows us to invert \(F\) efficiently.
+\medskip
+
+\noindent
+Given an element of the image space \((t_1,\dots,t_o)\in\mathbb F_q^o\), we want to find
+\((x_1,\dots,x_n)\) such that
+\[
+F(x_1,\dots,x_n)=(t_1,\dots,t_o).
+\]
+This is done as follows. First, we randomly fix the vinegar variables
+\[
+(x_1,\dots,x_v)=(r_1,\dots,r_v)\in\mathbb F_q^v.
+\]
+Then, for \(i=1,\dots,o\), we solve the system
+\[
+f_i(r_1,\dots,r_v,x_{v+1},\dots,x_{v+o})=t_i.
+\]
+
+\noindent
+After fixing the vinegar variables, the system becomes a linear system in \(o\) equations and \(o\) unknowns, namely the oil variables \(x_{v+1},\dots,x_{v+o}\). Therefore, it can be solved efficiently.
+\bigskip
+
+\noindent
+There is a small probability that the random choice of \((r_1,\dots,r_v)\) gives a linear system with no solution. In this case, we simply choose new vinegar values \((s_1,\dots,s_v)\) and repeat the procedure.
+\medskip
+
+\noindent
+A linear system with \(o\) equations and \(o\) unknowns has a unique solution whenever its coefficient matrix has full rank, equivalently when its determinant is non-zero.\\
+Since most randomly obtained matrices are expected to be invertible, the procedure usually succeeds after few attempts.
+
+\bigskip
+
+\noindent
+The reason why this works is the special structure of the central map. Before fixing the vinegar variables, each polynomial has the form
+\[
+f_i(x)=
+\sum_{j,k\in V} a_{j,k}^{(i)}x_jx_k
++
+\sum_{j\in V,\ k\in O} b_{j,k}^{(i)}x_jx_k
++
+\sum_{j\in V} c_j^{(i)}x_j
++
+\sum_{k\in O} c_k^{(i)}x_k
++
+d^{(i)}.
+\]
+
+\noindent
+After substituting \((x_1,\dots,x_v)=(r_1,\dots,r_v)\), all terms involving only vinegar variables become constants, while mixed vinegar-oil terms become linear terms in the oil variables:
+\[
+f_i(x)=
+\sum_{j,k\in V} a_{j,k}^{(i)}r_jr_k
++
+\sum_{j\in V,\ k\in O} b_{j,k}^{(i)}r_jx_k
++
+\sum_{j\in V} c_j^{(i)}r_j
++
+\sum_{k\in O} c_k^{(i)}x_k
++
+d^{(i)}.
+\]
+
+\noindent
+Thus, the original quadratic system is transformed into a linear system in the oil variables, which can be solved in polynomial time.
+\newpage
+
+\subsubsection{Signature Generation}
+\begin{algorithm}
+\begin{algorithmic}[1]
+    \State compute the hash $w = H(d) \in \mathbb{F}_q^o$ of the document $d$;
+    \State choose $v$ random values $r_1,\dots,r_v \in \mathbb{F}_q$ to assign to the vinegar variables;
+    \State solve the linear system $F(x_{v+1},\dots,x_{v+o}) = w$, finding the solution $(\ell_1,\dots,\ell_o)$;
+    \State compute the signature $(z_1,\dots,z_n) = T^{-1}(\ell_1,\dots,\ell_n)$.
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection{Signature verification}
+\begin{algorithm}
+\begin{algorithmic}[1]
+    \State compute the hash $w = H(d);$
+    \State compute $w' = P(z_1,\dots,z_n) = F(T(z_1,\dots,z_n))$ using the public system and the signature;
+    \State verify that $w = w'$;
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection{Example}
+
+Let us consider an example over \(\mathbb F_2\), with two oil variables
+\(o_1,o_2\) and two vinegar variables \(v_1,v_2\). The secret central map is
+\[
+F:\mathbb F_2^4 \to \mathbb F_2^2,
+\]
+defined as
+\[
+(v_1,v_2,o_1,o_2)
+\mapsto
+\bigl(
+f_1(v_1,v_2,o_1,o_2),
+f_2(v_1,v_2,o_1,o_2)
+\bigr).
+\]
+
+\noindent
+We choose the following quadratic polynomials:
+\[
+f_1(v_1,v_2,o_1,o_2)
+=
+v_2+o_1v_2+o_2v_1+v_1v_2,
+\]
+\[
+f_2(v_1,v_2,o_1,o_2)
+=
+o_2+o_2v_2+o_1v_1+1.
+\]
+
+\noindent
+These are Oil and Vinegar polynomials, because there are no quadratic terms
+containing only oil variables.
+
+\bigskip
+
+\noindent
+The polynomial system containing \(f_1\) and \(f_2\) is easy to invert. Indeed, for any
+\[
+(a_1,a_2)\in\mathbb F_2^2,
+\]
+we can solve
+\[
+\begin{cases}
+f_1(v_1,v_2,o_1,o_2)=a_1,\\
+f_2(v_1,v_2,o_1,o_2)=a_2,
+\end{cases}
+\]
+by assigning random values to the vinegar variables. Once the vinegar variables are fixed, the system becomes linear in the oil variables.
+
+\bigskip
+
+\noindent
+To hide the special Oil and Vinegar structure, we mix the input with an invertible affine map
+\[
+T:\mathbb F_2^4\to\mathbb F_2^4.
+\]
+In this example, we use the matrix
+\[
+T=
+\begin{pmatrix}
+1 & 0 & 0 & 1\\
+0 & 0 & 0 & 1\\
+0 & 1 & 0 & 0\\
+0 & 0 & 1 & 1
+\end{pmatrix}.
+\]
+
+\noindent
+The input transforms as
+\[
+T
+\begin{pmatrix}
+v_1\\
+v_2\\
+o_1\\
+o_2
+\end{pmatrix}
+=
+\begin{pmatrix}
+1 & 0 & 0 & 1\\
+0 & 0 & 0 & 1\\
+0 & 1 & 0 & 0\\
+0 & 0 & 1 & 1
+\end{pmatrix}
+\begin{pmatrix}
+v_1\\
+v_2\\
+o_1\\
+o_2
+\end{pmatrix}
+=
+\begin{pmatrix}
+v_1+o_2\\
+o_2\\
+v_2\\
+o_1+o_2
+\end{pmatrix}.
+\]
+
+\noindent
+Therefore, the public polynomials are obtained by composing \(F\) with \(T\):
+\[
+p_1(v_1,v_2,o_1,o_2)
+=
+f_1(T(v_1,v_2,o_1,o_2)),
+\]
+\[
+p_2(v_1,v_2,o_1,o_2)
+=
+f_2(T(v_1,v_2,o_1,o_2)).
+\]
+
+\noindent
+More explicitly:
+\[
+p_1(v_1,v_2,o_1,o_2)
+=
+f_1(v_1+o_2,o_2,v_2,o_1+o_2)
+=
+o_2+o_1o_2+o_2v_2+o_1v_1,
+\]
+\[
+p_2(v_1,v_2,o_1,o_2)
+=
+f_2(v_1+o_2,o_2,v_2,o_1+o_2)
+=
+o_1+o_1o_2+v_2v_1+o_2v_2+1.
+\]
+
+\noindent
+Hence, the public system is
+\[
+\begin{cases}
+p_1(v_1,v_2,o_1,o_2)
+=
+o_2+o_1o_2+o_2v_2+o_1v_1,\\
+p_2(v_1,v_2,o_1,o_2)
+=
+o_1+o_1o_2+v_2v_1+o_2v_2+1.
+\end{cases}
+\]
+
+\noindent
+This public system contains both quadratic terms in the vinegar variables and quadratic terms in the oil variables. Therefore, the public polynomials are no longer Oil and Vinegar polynomials. This makes the system hard to invert for someone who does not know the secret transformation \(T\) and the private polynomials \(f_1,f_2\).
+
+\bigskip
+
+\noindent
+Now suppose we want to sign the message
+\[
+M=(0,1)\in\mathbb F_2^2.
+\]
+A signature is a vector
+\[
+s=(v_1,v_2,o_1,o_2)\in\mathbb F_2^4
+\]
+such that
+\[
+P(s)=M,
+\]
+where \(P=(p_1,p_2)\) is the public map.
+
+\noindent
+Equivalently, we need to solve
+\[
+\begin{cases}
+o_2+o_1o_2+o_2v_2+o_1v_1=0,\\
+o_1+o_1o_2+v_2v_1+o_2v_2+1=1.
+\end{cases}
+\]
+
+\noindent
+Since we know the secret key, we solve this in two steps:
+\begin{enumerate}
+    \item find \((v_1',v_2',o_1',o_2')\) such that
+    \[
+    F(v_1',v_2',o_1',o_2')=(0,1);
+    \]
+    \item find \((v_1,v_2,o_1,o_2)\) such that
+    \[
+    T(v_1,v_2,o_1,o_2)=(v_1',v_2',o_1',o_2').
+    \]
+\end{enumerate}
+
+\noindent
+We first solve
+\[
+\begin{cases}
+f_1(v_1',v_2',o_1',o_2')=0,\\
+f_2(v_1',v_2',o_1',o_2')=1.
+\end{cases}
+\]
+Using the structure of the private polynomials, this becomes
+\[
+\begin{cases}
+v_2' + o_1'v_2' + o_2'v_1' + v_1'v_2' = 0,\\
+o_2' + o_2'v_2' + o_1'v_1' = 0.
+\end{cases}
+\]
+
+\noindent
+We assign random values to the vinegar variables. For example, choose
+\[
+(v_1',v_2')=(1,1).
+\]
+Substituting these values, we obtain a linear system in the oil variables:
+\[
+\begin{cases}
+o_1'+o_2'=0,\\
+o_1'=0.
+\end{cases}
+\]
+Thus,
+\[
+(o_1',o_2')=(0,0),
+\]
+and therefore
+\[
+(v_1',v_2',o_1',o_2')=(1,1,0,0).
+\]
+
+\noindent
+Now we recover the original variables by applying \(T^{-1}\):
+\[
+\begin{pmatrix}
+v_1\\
+v_2\\
+o_1\\
+o_2
+\end{pmatrix}
+=
+T^{-1}
+\begin{pmatrix}
+v_1'\\
+v_2'\\
+o_1'\\
+o_2'
+\end{pmatrix}
+=
+\begin{pmatrix}
+1 & 1 & 0 & 0\\
+0 & 0 & 1 & 0\\
+0 & 1 & 0 & 1\\
+0 & 1 & 0 & 0
+\end{pmatrix}
+\begin{pmatrix}
+1\\
+1\\
+0\\
+0
+\end{pmatrix}
+=
+\begin{pmatrix}
+0\\
+0\\
+1\\
+1
+\end{pmatrix}.
+\]
+
+\noindent
+Therefore, the signature for the message \(M=(0,1)\) is
+\[
+s=(0,0,1,1).
+\]
+
+\noindent
+The pair \((M,s)\) is published. Anyone can verify the signature using the public polynomials:
+\[
+\begin{cases}
+p_1(0,0,1,1)=1+1+0+0=0,\\
+p_2(0,0,1,1)=1+1+0+0+1=1.
+\end{cases}
+\]
+Therefore,
+\[
+P(s)=M.
+\]
+
+\noindent
+Thus, anyone can verify the validity of the signature, but producing such a signature without knowing the secret key \((T,f_1,f_2)\) is computationally hard.
+
+\subsubsection{Security of the scheme}
+\noindent
+Patarin's original choice is \(o=v\). In this case, both the secret and the public maps are functions
+\[
+F:\mathbb F_q^{2o}\to \mathbb F_q^o.
+\]
+
+\noindent
+The balanced version of Oil and Vinegar, where \(o=v\), is therefore not considered secure becauss it was attacked by Kipnis and Shamir in 1998.
+\medskip
+
+\noindent
+For this reason, in 1999, Kipnis, Patarin and Goubin introduced the \textit{Unbalanced Oil and Vinegar} scheme, usually denoted as UOV, where
+\[
+v>o.
+\]
+
+\noindent
+However, if \(v\) is too large, approximately when
+\[
+v>\frac{o^2}{2},
+\]
+the scheme also becomes insecure, because there are many more indeterminates than equations.
+\medskip
+
+\noindent
+A commonly considered secure choice of parameters satisfies
+\[
+o<v<3o.
+\]
+An efficient choice is obtained by taking approximately
+\[
+v \approx 1.35o.
+\]
+
+\subsection{Kipnis Attack}
+The all schemes based on the Oil and Vinegar idea are vulnerable to the attack of Kipnis and Shamir, which is a structural attack that exploits the special structure of the central map.
+
+\subsubsection{Idea of the attack}
+The attack of Kipnis and Shamir is based on the observation that the central map \(F\) has a special structure that can be exploited to recover the secret key.
+\medskip
+
+\noindent
+The central map is defined as (using a $\mathbf{F}_2$ example):
+\begin{align*}
+    f(v_1,v_2,o_1,o_2) = o_2+o_1+ v_1o_1 + v_1v_2
+\end{align*}
+\noindent
+can be mede homogeneous by adding a new variable $v_3$:
+\begin{align*}
+    \hat{f}(v_1,v_2,v_3,o_1,o_2) = v_3o_2+v_3o_1 + v_1o_1 + v_1v_2
+\end{align*}
+\vspace*{1em}
+
+\noindent
+Let $M= (m_1, \ldotp, m_k)$ be a message consisting of $k$ elements from a finite field $\mathcal{F}$ of order q.\\
+$X = (x_1, \ldotp, x_{2k})$ consists of $2k$ elements from $\mathcal{F}$, is a valid signature for $M$ if satisfies $G(X) = M$, where $G(x): \mathcal{F}^{2k} \to \mathcal{F}^k$ is the public map of the scheme (public key).
+\medskip
+
+\noindent
+The mapping $G$ can be written as $G(X) = (G_1(X), \ldots, G_k(X))$, where each $G_e(X)$ is a homogeneous quadratic form of $2k$ variables $X = (x_1, \ldots, x_{2k})$ over $\mathcal{F}$.
+\bigskip
+
+\noindent
+Such quatradic forms can be represented by the product $X^T G_eX$ where $G_e$ is a symmetric matrix $2k \times 2k$ and $X$ is a column vector of $2k$ variables.\\
+\medskip
+
+\noindent
+\textbf{Example:}\\
+Let consider the quadratic form in the private nonlinear system by matrice $F_e = \left( \begin{array}{c|c}
+        0 & B_1 \\
+        \hline
+        B_2 & B_3
+    \end{array} \right)$
+\noindent
+Consider the following example:
+\begin{align*}
+    F_e = \left( \begin{array}{cccc}
+        0 & 0 & 1 & 1 \\
+        0 & 0 & 0 & 1 \\
+        1 & 0 & 1 & 0 \\
+        1 & 0 & 0 & 1
+    \end{array} \right) \text{ and } Y = \left( \begin{array}{c}
+        y_1 \\
+        y_2 \\
+        y_3 \\
+        y_4
+    \end{array} \right)
+\end{align*}
+\noindent
+Then, the quadratic form is:
+\begin{align*}
+    Y^T F_e Y & = \left( \begin{array}{cccc}
+        y_1 & y_2 & y_3 & y_4
+    \end{array} \right) \left( \begin{array}{cccc}
+        0 & 0 & 1 & 1 \\
+        0 & 0 & 0 & 1 \\
+        1 & 0 & 1 & 0 \\
+        1 & 0 & 0 & 1
+    \end{array} \right) \left( \begin{array}{c}
+        y_1 \\
+        y_2 \\
+        y_3 \\
+        y_4
+    \end{array} \right) \\
+    & = \left( \begin{array}{cccc}
+        \underset{\color{red}\rule{2.2em}{0.8pt}}{y_3+y_4}, & \underset{\color{red}\rule{1.2em}{0.8pt}}{0} & y_1+y_3 & y_1+y_2+y_4
+        \end{array} \right) \left( \begin{array}{c}
+        y_1 \\
+        y_2 \\
+        y_3 \\
+        y_4 \end{array} \right) \\
+    & = y_1y_3+y_1y_4+y_1y_3+y_3^2+y_1y_4+y_2y_4+y_4^2 
+\end{align*}
+
+\noindent
+In {\color{red}\textbf{red}} I underlined that we don't have the quadratic terms $y_1$ and $y_2$ due the zero block in the upper left corner of the matrix $F_e$.\\ 
+Thus, when we multiply by $Y$, the variable $y_1$ and $y_2$ are not multiplied by themselves, i.e. they are Oil variables.  
+\vspace*{1em}
+
+\noindent
+In the context of \textit{OV} schemes, we have that each message $M$ has approximately $q^k$ valid signatures.\\
+The fact that the upper-left block of the matrices defining the central quadratic map is zero implies that the quadratic forms do not contain products between two oil variables.\\
+In other words, in a monomial of the form \(c_{ij}y_i y_j\), at most one of the two indices \(i\) and \(j\) can refer to an oil variable. As a consequence, the oil variables appear only linearly in the central equations, while the vinegar 
+variables can appear either linearly or quadratically.
+\medskip
+
+\noindent
+This distinction is the key idea behind the Oil and Vinegar construction. The central map is easy to invert for the legitimate signer because the signer knows which variables are oil variables and which variables are vinegar variables.\\
+However, this structure is hidden in the public key by the secret affine transformation. When the central equations are expressed in terms of the public variables \(X\), the separation between oil and vinegar variables disappears, and 
+the public equations look like random quadratic equations in which all variables seem to interact with each other through random-looking coefficients.
+\medskip
+
+\noindent
+To sign a message
+
+\[
+M = (m_1,\ldots,m_k),
+\]
+
+\noindent
+the legitimate signer first assigns random values to all vinegar variables,
+
+\[
+y_{k+1},\ldots,y_{2k}.
+\]
+
+\noindent
+Once these values are fixed, the central quadratic equations
+
+\[
+Y^t F_e Y = m_e
+\]
+
+\noindent
+are simplified. Since there are no quadratic terms involving two oil variables, the resulting equations become a system of \(k\) linear equations in the \(k\) oil variables. This linear system can be solved efficiently.
+\medskip
+
+\noindent
+If the system is singular, the signer chooses new random vinegar values and repeats the procedure. Otherwise, after solving the linear system, the signer obtains a complete internal solution \(Y\), containing both the randomly chosen 
+vinegar variables and the computed oil variables. This solution is then mapped back to the public variables using the inverse of the secret affine transformation,
+
+\[
+X = A^{-1}Y.
+\]
+
+\noindent
+The vector \(X\) is finally returned as the signature of the message \(M\).
+\medskip
+
+\noindent
+From the point of view of an attacker, the situation is different. The attacker only sees the public quadratic equations
+
+\[
+G_i(X) = m_i, \qquad i=1,\ldots,k,
+\]
+
+\noindent
+and does not know the hidden oil--vinegar separation. Therefore, forging a signature seems to require solving a system of random-looking multivariate quadratic equations.
+\medskip
+
+\noindent
+However, Kipnis and Shamir showed that the scheme can be broken by recovering the hidden oil variables, or more precisely the oil subspace. The important 
+observation is that the public quadratic forms still preserve some algebraic information about this hidden subspace. In particular, the oil subspace is a common invariant subspace for a family of matrices derived from the public key.
+\medskip
+
+\noindent
+The attack constructs matrices of the form
+
+\[
+G_i^{-1}G_j,
+\]
+
+\noindent
+starting from the public quadratic forms. Although the secret affine transformation hides the original oil and vinegar variables, these derived matrices preserve the oil subspace. Therefore, by studying their common eigenspaces, the attacker can recover a subspace equivalent to the secret oil space.
+\medskip
+
+\noindent
+Once this subspace is found, the attacker can choose a new basis in which the first \(k\) variables span the recovered oil subspace and the remaining variables complete the basis. In this new representation, the public quadratic equations recover the same useful property of the secret central map: they become linear in the oil variables once the vinegar variables are fixed.
+\medskip
+
+\noindent
+At this point, the attacker can imitate the legitimate signing algorithm. He assigns random values to the vinegar variables, obtains a linear system in the oil variables, solves it, and maps the solution back to the public variables. In this way, the attacker can forge valid signatures for arbitrary messages, even without reconstructing the exact original secret key.
+
+\subsection{Unbalanced Oil and Vinegar}
+Unbalanced Oil and Vinegar (UOV) is a variant of the original Oil and Vinegar scheme that was introduced to address the security weaknesses of the balanced version.\\
+In UOV, the number of vinegar variables \(v\) is greater than the number of oil variables \(o\). This unbalance makes the scheme more resistant to structural attacks, such as the Kipnis-Shamir attack.
+\medskip
+
+\noindent
+Moreover, UOV is designed to be more efficient than the original Oil and Vinegar, it is faster to sign and verify signatures, and it has reasoneble small signature sizes. \\
+The real drawback of UOV is that the public key size is quite large, which can be a problem for some applications.
+
+\subsubsection*{Hash and Sign}
+Given the public/secret key pair \((P, (T, F))\), it is straightforward to build the original UOV signature scheme using the hash-and-sign paradigm.
+
+\begin{itemize}
+    \item The given message is first hashed to a target vector \(t \in \mathbb{F}_q^m\) and the secret key \((T, F))\) enables us to efficiently find the premiage \(s \in \mathbb{F}_q^n\) of \(t\) under the public map \(P\), i.e. such that \(P(s) = t\). The signature is the vector \(s\).
+    \item To verify a signature \(s\) for a message \(M\), the verifier computes the hash \(t = H(M)\) and checks that \(P(s) = t \).     
+\end{itemize}
+
+\subsubsection{Overview of the scheme}
+The key generation algorithm of UOV is the same as the one of the original Oil and Vinegar scheme, with the only difference that we choose \(v > o\).
+
+\subsubsection*{Signature Generation}
+\begin{algorithm}
+\begin{algorithmic}[1]
+    \State compute the hash $t = H(\mu)$, with $\mu \in \{0,1\}^*$
+    \State find a random premiage $u \in \mathbb{F}_q^n$ such that $\mathcal{F}(u) = t$ using the secret key $(\mathcal{F},\mathcal{T})$
+    \State $s \colonequals \mathcal{T}^{-1}(u)$
+    \State $\sigma \colonequals s$
+    \State return $\sigma$ as signature of $\mu$
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection*{Signature verification}
+\begin{algorithm}
+\begin{algorithmic}[1]
+    \State compute the hash $t = H(\mu)$
+    \State compute $t' = P(\sigma)$ using the public key
+    \State verify that $t = t'$
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection{Central Map}
+The central map of UOV follows the same oil--vinegar principle described for the basic OV scheme. It is a quadratic map
+
+\[
+\mathcal{F} : \mathbb{F}_q^n \rightarrow \mathbb{F}_q^m
+\]
+
+\noindent
+where the first \(v=n-m\) variables are vinegar variables and the remaining \(m\) variables are oil variables. Each polynomial is constructed so that no quadratic term contains the product of two oil variables:
+
+\[
+f^{(k)}(x_1,\ldots,x_n)
+=
+\sum_{i=1}^{v}\sum_{j=i}^{n}
+\alpha_{i,j}^{(k)} x_i x_j .
+\]
+
+\noindent
+As a consequence, fixing the vinegar variables turns the system into a linear system in the oil variables.
+
+\[
+\mathcal{T} : \mathbb{F}_q^n \rightarrow \mathbb{F}_q^n
+\]
+
+\noindent
+is an invertible linear transformation, which is used to hide the structure of the central map \(\mathcal{F}\) in \(\mathcal{P}\).
+
+\subsubsection*{Inversion operation of $\mathcal{P}$}
+The inversion of the public map
+
+\[
+\mathcal{P} = \mathcal{F} \circ \mathcal{T}
+\]
+
+\noindent
+is efficient for the legitimate signer because both \(\mathcal{F}\) and \(\mathcal{T}\) are known. Since \(\mathcal{T}\) is an invertible linear transformation, inverting \(\mathcal{P}\) essentially reduces to finding a 
+preimage under the central map \(\mathcal{F}\).
+\medskip
+
+\noindent
+In UOV, this is done by randomly fixing the vinegar variables. Once these variables are fixed, the quadratic system defined by \(\mathcal{F}\) becomes a linear system in the oil variables. Therefore, the signer can solve it using 
+Gaussian elimination.
+\medskip
+
+\noindent
+If the resulting linear system has full rank, a valid preimage is obtained. If not, the signer simply chooses new random vinegar variables and repeats the 
+procedure. Since the induced linear system is full-rank with high probability, only a polynomial number of attempts is needed.
+\medskip
+
+\noindent
+Finally, once a preimage under \(\mathcal{F}\) is found, the signer applies
+
+\[
+s = \mathcal{T}^{-1}
+\begin{pmatrix}
+u \\
+w
+\end{pmatrix}
+\]
+
+\noindent
+to obtain a valid signature \(s\) for the target message.
+
+\subsubsection{Specifications}
+One of the most important contributions of authors is the idea behind the "compression".
+
+\begin{quotation}
+    UOV's paramenters ($m = 96, n= 244, q=256, v=n-m$)
+\end{quotation}
+
+\subsubsection*{Secret key size}
+Racall that the secret key (in the classic schema) is given by the two maps:
+
+\begin{enumerate}
+    \item $\mathcal{F}: \mathbb{F}_q^n \to \mathbb{F}_q^m$ (the central map that represents the nonlinear part of the scheme easy to solve)
+    \item $\mathcal{T}: \mathbb{F}_q^n \to \mathbb{F}_q^n$ (the linear transformation, \textit{Professor called it "the map that chose the coordinates"})
+\end{enumerate}
+
+\noindent
+Since \[
+\mathcal{F}
+\]
+describes the non-linear system with \(m\) equations.
+
+\noindent
+Remembering that a quadratic polynomial with \(m\) variables can be denoted by a matrix in \(\mathbb{F}_q^{m \times m}\), we have that \(\mathcal{F}\) is denoted by \(m \cdot m^2\) elements of \(\mathbb{F}_q\).
+
+\[
+\mathcal{T}
+\]
+describes a linear map, thus it can be represented by a matrix in \(\mathbb{F}_q^{m \times m}\), we have that \(\mathcal{T}\) is denoted by \(m^2\) elements of \(\mathbb{F}_q\).
+
+\noindent
+Thus, the private key \((\mathcal{F}, \mathcal{T})\) has size
+
+\[
+\log_2 q \cdot m^2 \cdot m + \log_2 q \cdot m \text{ bits }
+\]
+
+\[
+\simeq 5.7 \ \text{MB}.
+\]
+
+\vspace*{2em}
+
+\noindent
+In UOV, the trapdoor, i.e., the secret key is represented by a matrix
+
+\[
+\begin{pmatrix}
+O \\
+I_m
+\end{pmatrix}
+\]
+
+\noindent
+where
+
+\[
+O \in \mathbb{F}_q^{v \times m}.
+\]
+
+\noindent
+Indeed, the Oil space for the map \(\mathcal{F}\) is
+
+\[
+\operatorname{span}(e_{v+1}, \ldots, e_m)
+\]
+
+\noindent
+where \(e_1, \ldots, e_m\) are the vectors of the canonical basis.
+\medskip
+
+\noindent
+Indeed, for \(\mathcal{F}\) the Oil variables are the last \(m\) variables of
+
+\[
+(x_1, x_2, \ldots, x_v, x_{v+1}, \ldots, x_m).
+\]
+\noindent
+Then, the corresponding Oil space for the map \(\mathcal{P}\) is
+
+\[
+\operatorname{span}
+\left(
+\mathcal{T}^{-1}(e_{v+1}), \ldots, \mathcal{T}^{-1}(e_m)
+\right),
+\]
+\noindent
+which is a vector subspace of \(\mathbb{F}_q^n\) with dimension \(m\).
+\medskip
+
+\noindent
+In general, a vector subspace of \(\mathbb{F}_q^n\) with dimension \(m\) is described by a basis with \(m\) vectors, i.e. a standard way for constructing such vectors is to consider
+\begin{align*}
+    &(a_1,\ldots,a_v,1,0,\ldots,0),\\
+    &(b_1,\ldots,b_v,0,1,\ldots,0),\\
+    &\ldots,\\
+    &(m_1,\ldots,m_v,0,0,\ldots,1).
+\end{align*}
+
+\noindent
+which are surely linearly independent.\\
+These vectors, where \(a_1,\ldots,a_v\), \(b_1,\ldots,b_v\), \(\ldots\), \(m_1,\ldots,m_v\) can be randomly chosen in \(\mathbb{F}_q\), are the columns of the matrix \(O\).
+\medskip
+
+\noindent
+Considering
+
+\[
+O \in \mathbb{F}_q^{v \times m}
+\]
+
+\noindent
+as private key, then its size is
+
+\[
+\log_2 q \cdot v \cdot m
+\]
+
+\noindent
+bits
+
+\[
+\simeq 14.2 \ \text{KB}.
+\]
+
+\noindent
+Finally, since the entries of \(O\) are random, we can only memorize the seed for 
+generating them and consequently the private key has only size \(32\) bytes.
+
+\subsubsection*{Public key size}
+In the classical scheme is given by the map
+
+\[
+\mathcal{P} : \mathbb{F}_q^m \longrightarrow \mathbb{F}_q^m
+\]
+\noindent
+which represents the non-linear system hard to solve.
+\medskip
+
+\noindent
+Similarly to \(\mathcal{F}\), the map \(\mathcal{P}\) can be described by
+
+\[
+\log_2 q \cdot m \cdot m^2
+\]
+\noindent
+bits
+
+\[
+\simeq 5.6 \ \text{MB}.
+\]
+\bigskip
+
+\noindent
+In UOV, the quadratic polynomials of \(\mathcal{P}\) are described by \(m\) 
+matrices
+
+\[
+P_i =
+\begin{pmatrix}
+P_i^{(1)} & P_i^{(2)} \\
+0 & P_i^{(3)}
+\end{pmatrix},
+\qquad i = 1,\ldots,m,
+\]
+
+\noindent
+in \(\mathbb{F}_q^{m \times m}\), where \(P_i^{(1)}\) and \(P_i^{(2)}\) are 
+randomly computed, while \(P_i^{(3)}\) is computed from \(P_i^{(1)}\), 
+\(P_i^{(2)}\) and \(O\).
+
+\noindent
+Thus for describing the public key we need \(m\) matrices in 
+\(\mathbb{F}_q^{m \times m}\), i.e.,
+
+\[
+\log_2 q \cdot m^3
+\]
+\noindent
+bits
+
+\[
+\simeq 884 \ \text{KB}.
+\]
+
+\bigskip
+
+\noindent
+Actually, \(P_i^{(3)}\), for \(i=1,\ldots,m\), are upper triangular matrices. \\
+Thus, we can describe each of these matrices with
+
+\[
+m + (m-1) + (m-2) + \cdots + 2 + 1
+=
+\frac{m(m+1)}{2}
+\]
+\noindent
+elements of \(\mathbb{F}_q\).
+\medskip
+
+\noindent
+Then, the public key is described by
+
+\[
+\log_2 q \cdot m \cdot \frac{m(m+1)}{2}
+\]
+\noindent
+bits
+
+\[
+= 447 \ \text{KB}.
+\]

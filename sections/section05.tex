@@ -1,0 +1,945 @@
+\section{Code-base cryptosystems}
+As already mentioned, code-based cryptography is based on the hardness relying on coding theory. In particular, the security of code-based cryptosystems relies on the difficulty of correcting errors in a linear code.
+\medskip
+
+\noindent
+Thus, one idea is to make public a ’random’ code and keep private an
+equivalent ’structured’ code, where it is fast to correct the errors. Then, the plaintext could be an information word and the ciphertext could be the corresponding codeword plus an error (with high Hamming weight),
+so that only who has the ’structured’ code is able to recover the plaintext (i.e., to recover the codeword and consequently the corresponding information word). In some schemes, the plaintext could also be the codeword or the error vector.
+\bigskip
+
+\noindent
+The first cryptosystem based on coding theory was proposed by Robert McEliece in 1978
+
+\subsection{McEliece Cryptosystem}
+The McEliece cryptosystem is based on the hardness of decoding a random linear code. The original proposal uses Goppa codes, which are a class of error-correcting codes that have efficient decoding algorithms. The security of the McEliece cryptosystem relies on the difficulty of decoding a random linear code, which is believed to be hard even for quantum computers.
+
+\subsubsection{Key Generation}
+
+\begin{algorithm}
+\begin{algorithmic}[1]
+    \State Choose integers, $m$, $t$ and fix $n = 2^m$
+    \State Select a binary Goppa code $\mathcal{C}$ of length $n$, able to correct $t$ errors (this is equivalent to select an irreducible polynomial of degree $t$ over $\mathbb{F}_{2^m}$)
+    \State Let $G$ be the generator matrix $k \times n$ of $\mathcal{C}$, where $k$ is the dimension of the code (observe that $k \geq n - mt$)
+    \State Choose a random $k \times k$ invertible matrix $S$ 
+    \State Choose a random $n \times n$ permutation matrix $P$
+    \State Compute  $\hat{G} = SGP$
+\end{algorithmic}
+\end{algorithm}
+\noindent
+The pair $\hat{G}$ is the public key, while the private key is the triple $S, G, P$.
+
+\subsubsection{Encryption}
+
+\begin{algorithm}
+\begin{algorithmic}[1]
+    \State Let $m$ be the plaintext, where $m$ is a binary vector of length $k$ (so $m \in \mathbb{F}_2^k$)
+    \State Choose a random error vector $e$ of length $n$ and Hamming weight $t$ (i.e., $e$ has exactly $t$ non-zero entries)
+    \State Compute the vector $y = m\hat{G} + e$
+\end{algorithmic}
+\end{algorithm}
+\noindent
+Vector $y$ is the ciphertext.
+
+\subsubsection{Decryption}
+Let $y \in \mathbb{F}_2^n$ be the ciphertext. Remember that the private key is the triple $S, G, P$. The decryption process is as follows:
+
+\begin{algorithm}
+\begin{algorithmic}[1]
+    \State Compute $y' = yP^{-1}$
+    \State Use Patterson's algorithm to decode $y'$. \\
+    Let $c$ be the decoded codeword and $m'$ be the corresponding information word
+    \State Evaluate $m'S^{-1}$
+\end{algorithmic}
+\end{algorithm}
+\noindent
+The output of the decryption process is $m'S^{-1}$, which is the original plaintext $m$.
+
+
+\subsubsection *{Proof of correctness}
+Let us verify that the decryption process:
+
+\begin{align*}
+    y = cP^{-1} &= (m\hat{G} + e)P^{-1} = mSGPP^{-1} + eP^{-1} = (mS)G + eP^{-1} \\
+    &= m'G + f
+\end{align*}
+
+\noindent
+For semplicity we have denoted $f = eP^{-1}$ (that is a vector in $\mathbb{F}_2^n$ with Hamming weight $t$) and $m' = mS$ (that is the vector in $\mathbb{F}_2^n$ 
+\medskip
+
+\noindent
+Let us observe that $m'$ is the information word, and $m'G$ is the codeword of the Goppa code.\\
+Moreover, $f$ is an error vector with Hamming weight $t$, because $e$ is a vector in $\mathbb{F}_2^n$ with Hamming weight $t$ and its weight is not modified by $P^{-1}$, since $P^{-1}$ is a permutation matrix and consquently it only permutes the entries of $e$.
+\medskip
+
+\noindent
+Thus, $y \in \mathbb{F}_2^n$ is a recieved word obteined from a codeword of the Goppa code $m'G$ plus an error vector $f$; $t$ errors have been added to the codewor $m'G$.\\
+Thus, applying the Patterson's algorithm to $y$ we are able to remove the errors and to recover the codeword $m'G$
+
+\begin{center}
+    Patterson($y$) = Patterson($m'G + f$) = $m'G = y'$
+\end{center}
+\noindent
+From $y' \in C_{Goppa}$  we can recover the information word which is $m'$ (remember that $m'$ is ($mS$))
+\medskip
+
+\noindent
+Finally, we can compute $m'S^{-1} = mSGS^{-1} = mG$, and since $G$ is the generator matrix of the Goppa code, we have that $m$ is the original plaintext.
+
+\subsubsection{Security of McEliece}
+
+\begin{quotation}
+    \textit{\textbf{Authr's note:} For the following discussion, I will refer to the original paper of McEliece, so (according to the lesson) I will use the oringinal notation of the paper}
+\end{quotation}
+
+\noindent
+As discussed by McEliece in his original paper, we evaluate the security checking the following points:
+\begin{itemize}
+    \item COA (security against a ciphertext-only attack)
+    \item Brute-force attack
+\end{itemize}
+
+\subsubsection*{COA}
+Let us suppose to know a ciphertext $\vect{x} = (x_1, x_2, \ldots, x_n) \in \mathbb{F}_2^n$ obteined from the McEliece cryptosystem.\\
+Thus we know that $\vect{x} = \vect{u}G' + \vect{z}$, where:
+\begin{itemize}
+    \item $\vect{u} = (u_1, u_2, \ldots, u_k) \in \mathbb{F}_2^k$ is the plaintext
+    \item $G'  \in \mathbb{F}_2^{k \times n}$ is the public key
+    \item $\vect{z} = (z_1, z_2, \ldots, z_n) \in \mathbb{F}_2^n$ is a random UNKNOWN vector with Hamming weight $t$ 
+\end{itemize}
+\vspace{1 cm}
+
+\noindent
+We would like to recover the plaintext $\vect{u}$\\
+From $\vect{x} = \vect{u}G' + \vect{z}$, we have:
+\begin{center}
+    $\textcolor{ForestGreen}{(x_1, x_2, \ldots, x_n)} = \textcolor{BrickRed}{(u_1, u_2, \ldots, u_k)G'} + \textcolor{BrickRed}{(z_1, z_2, \ldots, z_n)}$
+\end{center}
+\noindent
+but we know only the vector $\vect{x}$ (green), others are unknown (red).\medskip
+
+\noindent
+Thus, we have a linear sysetm with $n$ equations and $k + n$ unknowns:
+\[\circleast\begin{cases}
+    x_1 = u_1g'_{11} + u_2g'_{12} + \ldots + u_k g'_{k1} + z_1 \\
+    x_2 = u_1g'_{12} + u_2g'_{22} + \ldots + u_k g'_{k2} + z_2 \\
+    \vdots \\
+    x_n = u_1g'_{1n} + u_2g'_{2n} + \ldots + u_k g'_{kn} + z_n
+\end{cases}\]
+
+\noindent
+Assuming that the equations are all linearly independent, we have that this linear system has $k$ degrees of freedom, so $k$ free variables(by Rouché-Capelli theorem)\\
+Since our variables take values in $\mathbb{F}_2$, this means that we have $2^k$ possible solutions and for finding the plaintext we should check all these $2^k$ possible solutions.\\
+It is simple to see that the complexity of this attack is $O(2^k)$, so if $k = 524$ (as in the original paper of McEliece) we have a security of 524 bits.
+\vspace{1 cm}
+
+\noindent
+This attack can be easily improved.\\
+Indeed in \circleast  we are only interested into the $k$ unknowns $u_1, u_2, \ldots, u_k$. Thus if we are able to select $k$ equations among the $n$ equations in \circleast  where the $z_i$'s are all zero, then we have a linear system with $k$ equations and $k$ unknowns which has one solution (which is the plaintext).
+\medskip
+
+\noindent
+However, the probability of selecting such equations is
+\begin{center}
+    $(1 -\frac{t}{n})^k$
+\end{center}
+\noindent
+Indeed, the probability that $z_i \neq 0$ is $\frac{t}{n}$ (since $\vect{z}$ is a vector of length $n$ and Hamming weight $t$), so the probability that $z_i = 0$ is $1 - \frac{t}{n}$.
+\vspace{1 cm}
+
+\noindent
+Thus, in average, we need to randomly select $(1 -\frac{t}{n})^{-k}$ linear systems (with $k$ equations) in order to obtain one linear system where all the $z_i$'s are zero.\\
+Thus, the total cost is
+\begin{center}
+    $k^3(1 -\frac{t}{n})^{-k} \sim 2^{65}$
+\end{center}
+\newpage
+
+\subsubsection*{Brute force attacks}
+Let us consider the parameters of the original paper of McEliece, that is $m = 10, t = 50, n = 2^{10} = 1024$ and $k \geq n - mt = 1024 - 10 \cdot 50 = 524$.\\
+Let us check that brute force is infeasible.
+\medskip
+
+\noindent
+Recall that the private key is the triple $S, G, P$ with $S \in \mathbb{F}_2^{k \times k}$ invertible matrix, $G \in \mathbb{F}_2^{k \times n}$ generator matrix of the Goppa code and $P \in \mathbb{F}_2^{n \times n}$ permutation matrix.\\
+Check the number of possible private keys by checking the number of possible $S, G, P$:
+\vspace{1 cm}
+
+\noindent
+- \underline{The number of possible matrices} $S$:
+\medskip
+
+\noindent
+It is the number of matrices in $\mathbb{F}_2^{k \times k}$ which are invertible (determinant is not zero) or equivalently the number of matrices in $\mathbb{F}_2^{k \times k}$ which have linearly independent columns.
+\medskip
+
+\noindent
+In general, the number of matrices in $\mathbb{F}_2^{k \times k}$ with linearly independent columns is
+\begin{center}
+    $q^k - 1$ (for the first column) $\cdot$ $q^k - q$ (for the second column) $\cdot$ $q^k - q^2$ (for the third column) $\cdot \ldots \cdot$ $q^k - q^{k-1}$ (for the last column)
+\end{center}
+\noindent
+Indeed, the first column $\vect{c}_1$ must be a non-zero element of $\mathbb{F}_2^k$ (non-zero vector of length $k$).\\
+Observing that $|\mathbb{F}_q^k| = q^k$, we have that the number of possible choices for $\vect{c}_1$ is $q^k - 1$.
+\medskip
+
+\noindent
+The second column $\vect{c}_2$ must be linearly independent from $\vect{c}_1$.\\
+Thus, we must have $\vect{c}_2 \neq a\vect{c}_1 \forall a \in \mathbb{F}_q$ and thus we have $q^k - q$ possible choices for $\vect{c}_2$.
+\medskip
+
+\noindent
+The third column $\vect{c}_3$ must be linearly independent from $\vect{c}_1$ and $\vect{c}_2$.\\
+Thus, we must have $\vect{c}_3 \neq a_1\vect{c}_1 + a_2\vect{c}_2 \forall a_1, a_2 \in \mathbb{F}_q$ and thus we have $q^k - q^2$ possible choices for $\vect{c}_3$.
+\medskip
+
+\noindent
+Continuing in this way, we have that the last column $\vect{c}_k$ must be linearly independent from $\vect{c}_1, \vect{c}_2, \ldots, \vect{c}_{k-1}$.\\
+Thus, we must have $\vect{c}_k \neq a_1\vect{c}_1 + a_2\vect{c}_2 + \ldots + a_{k-1}\vect{c}_{k-1} \forall a_1, a_2, \ldots, a_{k-1} \in \mathbb{F}_q$ and thus we have $q^k - q^{k-1}$ possible choices for $\vect{c}_k$.
+\bigskip
+
+\noindent
+Thus, the total number of possible $S$ is
+\begin{center}
+    $(2^k - 1)(2^k - 2)(2^k - 2^2) \cdot \ldots \cdot (2^k - 2^{k-1}) > 2^k = 2^{256}$
+\end{center}
+\vspace{1 cm}
+
+\noindent
+- \underline{The number of possible matrices} $P$:
+\medskip
+
+\noindent
+It is equivalent to the number of possible permutations of $n$ elements, that is $n!$.
+\begin{center}
+    $n! \geq (\frac{n}{2})^{\frac{n}{2}} = (2^9)^{2^9} = 2^{9 \cdot 512} $
+\end{center}
+\vspace{1 cm}
+
+\noindent
+- \underline{The number of possible matrices} $G$:
+\medskip
+
+\noindent
+It is equivalent to the number of binary Goppa codes able to correct $t$ errors, that is the number of irreducible polynomials of degree $t$ over $\mathbb{F}_{2^m}$
+\medskip
+
+\noindent
+In general, the number of irreducible polynomials of degree $t$ over $\mathbb{F}_{2^m}$ is
+\begin{center}
+    $\frac{1}{t} \sum_{d | t} \mu(d) q^{\frac{t}{d}}$
+\end{center}
+\noindent
+where \[\mu(d)\begin{cases}
+    1 & \text{if } d=1 \\
+    0 & \text{if } d \text{ not squarefree}\\
+    (-1)^a & \text{if } d \text{ square free in the number of its prime factors}
+\end{cases}\]
+\noindent
+In our case, we have
+\begin{center}
+    $\frac{1}{t} \sum_{d | t} \mu(d) (2^m)^{\frac{t}{d}} > \frac{1}{t} (2^m)^t = \frac{1}{50} 2^{10 \cdot 50} = \frac{1}{50} 2^{500}$
+\end{center}
+
+\newpage
+\subsubsection{McEliece trapdoor "improvements"}
+A trapdoor function is a function that is easy to compute in one direction, but hard to invert unless you have some secret information (the trapdoor).\\
+In the McEliece cryptosystem, the trapdoor is
+\begin{center}
+    $G' = SGP$
+\end{center}
+\noindent
+where $G'$ is the public key, while $S, G, P$ are the private key.
+\medskip
+
+\noindent
+In ordere to save space, someone could try to use trapdoor only
+\begin{center}
+    $G' = GP$ or $G' = SG$
+\end{center}
+\noindent
+However, these "improvements" are not secure.
+\medskip
+
+\noindent
+Indeed, if we only know $G'$, it is not possible to recover the private key $(S, G)$ or $(G, P)$.\\
+Moreover, the proof of correctness (with the some modifications) still works also in these cases.\\
+However, if we consider $G'=SG$ we are not hiding Goppa code with the generator matrix $G$, because $SG$ only provides a \underline{change of basis}. This means that the linear code with generator matrix $G'$ is the same as the linear code with generator matrix $G$ (Goppa code).\\
+In other words, $G$ and $G'= SG$ are two generator matrices of the \underline{same} linear code (remeber that a generator matrix has a rows a basis of the linear code).\\
+\medskip
+
+\noindent
+If we consider $G' = GP$, then the linear code $C'$ with generator matrix $G'$ is equivalent but not equal to the linear code $C$ with generator matrix $G$.\\
+However, the exist some method in order to recover $G$ from $G'$ when, for example, $C$ is a Reed-Solomon code (that is a particular class of linear code).
+\medskip
+
+\noindent
+Thus, we don't consider these "improvements" as secure, because they don't hide the structure of the Goppa code, and consequently they are vulnerable to structural attacks (that is attacks that try to recover the private key from the public key by exploiting the structure of the code).
+
+\subsubsection{Digital Signature (McEliece)}
+Usaually, when we have a public key cryptosystem, we can also use it to build a digital signature scheme exploiting the idea of signing a message by encrypting it with the private key and verifying the signature by decrypting it with the public key.
+\bigskip
+
+\noindent
+In the case of McEliece, following the same idea, we could:
+\begin{enumerate}
+    \item Apply the decrytion algorithm to a vector $y \in \mathbb{F}_2^n$ and find $m \in \mathbb{F}_2^k$ and $e \in \mathbb{F}_2^n$ such that $y = mG' + e$ and send $(m, e)$ as signature of $y$.
+    \item To verify the signature, we can check that $y = mG' + e$ and accept the signature if and only if is true.
+\end{enumerate}
+\noindent
+However, this scheme has a problem because we are not able to sign all the possible messages $y \in \mathbb{F}_2^n$, but only the messages $y \in \mathbb{F}_2^n$ obtained from a codeword of $C'$ and adding an error of Hamming weight $t$.
+\medskip
+
+\noindent
+The number of these kind of messages is
+\begin{align*}
+    2^k \cdot \sum_{i=0}^t \binom{n}{i}
+\end{align*}
+\noindent
+Indeed, if we fix a codeword, we have
+\begin{itemize}
+    \item $n$ possible positions to insert 1 error
+    \item $\binom{n}{2}$ possible positions to insert 2 errors
+    \item $\vdots$
+    \item $\binom{n}{t}$ possible positions to insert $t$ errors
+\end{itemize}
+\noindent
+The number of all elements of $\mathbb{F}_2^n$ is $2^n$. Thus, using McEliece parameters ($n=2^{10}, t = 50, k = 254$), we have that the number of messages in $\mathbb{F}_2^n$ that we can sign is
+\begin{align*}
+    \frac{2^k \sum_{i=0}^t \binom{n}{i}}{2^n} &\sim \frac{2^{808}}{2^{1024}} \sim \frac{1}{2^{216}}
+\end{align*}
+\noindent
+\textbf{VERY LOW!} \\
+So this scheme is not secure, because an attacker can easily forge a signature by randomly selecting a message $y \in \mathbb{F}_2^n$ and checking if it is a valid signature.
+
+
+\subsection{Niederreiter Cryptosystem}
+The Niederreiter cryptosystem is a variant of the McEliece cryptosystem.
+\bigskip
+
+\noindent
+Let us recall that in the McEliece cryptosystem, the ciphertext is
+\begin{align*}
+    c = mG' + e \in \mathbb{F}_2^n
+\end{align*}
+\noindent
+where $m \in \mathbb{F}_2^k$ is the plaintext, $G' \in \mathbb{F}_2^{k \times n}$ is the public key and $e \in \mathbb{F}_2^n$ is a random error vector with Hamming weight $t$.
+\medskip
+
+\noindent
+Let us observe that, if we find $\vect{e}$ we are able to recover $\vect{m}$ from $\vect{c}$.
+\medskip
+
+\noindent
+However, the number of possible error vector $\vect{e}$ is very large. Indeed, the number of possible error vector $\vect{e} \in \mathbb{F}_2^n$ with Hamming weight $t$ is
+\begin{align*}
+    \binom{n}{t} &= \frac{n \cdot (n-1) \cdot \ldots \cdot (n-(t-1))}{t!} \geq \frac{(\frac{n}{t})^t}{t^t} = \left(\frac{n}{2t}\right)^t \\
+    &=_{\text{consider the McEliece parameters}} \left(\frac{2^{10}}{2^3}\right)^{50} \geq \left(\frac{2^{10}}{2^3}\right)^{50} = 2^{150}
+\end{align*}
+
+\noindent
+Let us observe that, from $\vect{c} = \vect{m}G' + \vect{e}$, we know the syndrome of $\vect{c}$, because is $H'\vect{c} = H'\vect{e}$, where $H'$ is the parity check matrix of $C'$, but in a random linear code $C'$, if we only know the syndrome of $\vect{c}$, we are not able to recover $\vect{e}$ (syndrome decoding problem).
+\medskip
+\noindent
+Thus, the idea of Niederreiter is to hide a plaintex in $H'\vect{e}$ where $\vect{e}$ become the plaintext.
+\bigskip
+
+\noindent
+This, essentially, is the idea of the Niederreiter cryptosystem, that is a variant of the McEliece cryptosystem where the plaintext is the error vector $\vect{e}$ and the ciphertext is the syndrome $H'\vect{e}$.
+
+\subsubsection{Key Generation}
+
+\begin{algorithm}
+\begin{algorithmic}[1]
+    \State Choose integers, $m$, $t$ and fix $n = 2^m$
+    \State Select a binary Goppa code $\mathcal{C}$ of length $n$, able to correct $t$ errors (this is equivalent to select an irreducible polynomial of degree $t$ over $\mathbb{F}_{2^m}$)
+    \State Let $H \in \mathbb{F}_{2}^{(n-k) \times (n-k)}$ be the parity check matrix
+    \State Select an invertible matrix $S \in \mathbb{F}_2^{(n-k) \times (n-k)}$ and a permutation matrix $P \in \mathbb{F}_2^{n \times n}$
+    \State Compute $H' = SHP$, a parity check matrix of a random linear code
+\end{algorithmic}
+\end{algorithm}
+\noindent
+The $H'$ is the public key, while the private key is the triple $S, H, P$.
+
+
+\subsubsection{Encryption}
+Let $\vect{m} \in \mathbb{F}_2^n$ with Hamming weight $t$ be the plaintext
+\begin{algorithm}
+\begin{algorithmic}[1]
+    \State Compute the syndrome $\vect{c} = H'\vect{m}$
+\end{algorithmic}
+\end{algorithm}
+\noindent
+The vector $\vect{c}$ is the ciphertext.
+
+\subsubsection{Decryption}
+Let $c \in \mathbb{F}_2^{n-k}$ be the ciphertext. Remember that the private key is the triple $S, H, P$. The decryption process is as follows:
+
+\begin{algorithm}
+\begin{algorithmic}[1]
+    \State Compute $\vect{s} = S^{-1}\vect{c}$ (is the syndrome of error in the Goppa code)
+    \State Compute the error vector $\vect{e}$ corresponding to the syndrome $\vect{s}$ using Patterson's algorithm
+    \State Compute $P^{-1}\vect{e} = m \longleftarrow $the plaintext
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Comparison}
+It is known that PQC has a size limitation, that is the public key and the ciphertext of a PQC scheme are usually larger than the public key and the ciphertext of a classical cryptosystem (like RSA or ECC).
+\medskip
+
+\noindent
+To better understand this, let us compare the size of the public key and the ciphertext of McEliece and Niederreiter cryptosystem with the size of the public key and the ciphertext of RSA
+
+\subsubsection{RSA (basic)}
+Consider the monulo $N \sim 2048$ bits.\\
+This ensure a bit-secure > 100 bits, so it's menas that cost of the attack is $O(2^{100})$.
+
+\subsubsection*{Plaintext} $m \in \mathbb{Z}_n$, thus it has a size of 2048 bits.
+\subsubsection*{Ciphertext} $c \in \mathbb{Z}_n$, thus it has a size of 2048 bits.
+\subsubsection*{Ratio} $\frac{2048}{2048} = 1$
+
+\subsubsection*{Public-key} $(e, N)$ where $e \in \mathbb{Z}_{\phi(N)}$.\\
+However, $e$ is usually 65537, because it has a convenient bit-expression. 655037 = 100$\ldots$001 and exponentiation is more convenient if the exponent has this kind of binary representation.\\
+This because we use the square-and-multiply algorithm for computing powers.
+
+\begin{algorithm}
+\caption{Square-and-multiply}
+\begin{algorithmic}[1]
+
+    \State \textbf{Input:} $x, n$ 
+    \State Let $n_1, n_2, \ldots, n_k$ be the binary representation of $n$ 
+    \State Set $r=x$
+
+    \For{$i = 2$ to $k$}
+        \If{$n_i = 0$}
+            \State $r = r \cdot r$ 
+        \Else
+            \State $r = r \cdot r$ AND $r = r \cdot x$ 
+        \EndIf
+    \EndFor
+
+\end{algorithmic}
+\end{algorithm}
+
+\noindent
+Thus, the public key has a size of 2048 bits.
+
+\subsubsection *{Secret-key}
+$d \in \mathbb{Z}_{\phi(N)}$\\
+Since $\phi(N) \sim N$ we have that $d$ has a size of 2048 bits.
+
+\subsubsection{McEliece (basic)}
+Consider the parameters of the original paper of McEliece, that is $m = 10, t = 50, n = 2^{10} = 1024$ and $k = n - mt = 524$.
+\medskip
+
+\noindent
+Thus paramenters ensure 65 bits of security, that is the cost of the attack is $O(2^{65})$.
+
+\subsubsection*{Plaintext} 
+$m \in \mathbb{F}_2^k$, thus it has a size of 524 bits.
+
+\subsubsection*{Ciphertext} 
+$c \in \mathbb{F}_2^n$, thus it has a size of 1024 bits.
+
+\subsubsection*{Ratio} 
+$\frac{1024}{524} \sim 2$
+
+\subsubsection*{Public-key} 
+$G' \in \mathbb{F}_2^{k \times n}$, thus it has a size of $k \cdot n = 524 \cdot 1024$ bits.
+
+\subsubsection*{Secret-key}
+$S, G, P$, where $S \in \mathbb{F}_2^{k \times k}$, $G \in \mathbb{F}_2^{(k \times n}$, and $P \in \mathbb{F}_2^{n \times n}$ (there are n! permutations of $n$ elements, so we can encode the permutation matrix $P$ with $\log_2(n!)$ bits).\\
+Thus, the secret key has a size of 524 $\cdot$ 524 + 524 $\cdot$ 1024 + 8749 bits.
+
+\subsubsection{Niederreiter (basic)}
+Consider the parameters of the original paper of McEliece
+
+\subsubsection*{Plaintext}
+$m \in \mathbb{F}_2^n$ with Hamming weight $t$. Since there are $\binom{n}{t}$ vectors of this kind, then we can describe them with $\log_2(\binom{n}{t})$ bits.\\
+Thus, the plaintext has a size of $\log_2(\binom{n}{t}) \sim 284$ bits.
+
+\subsubsection*{Ciphertext}
+$c \in \mathbb{F}_2^{n-k}$, thus it has a size of 500 bits.
+
+\subsubsection*{Ratio}
+$\frac{500}{284} = 1.76$
+
+\subsubsection*{Public-key}
+$H' \in \mathbb{F}_2^{(n-k) \times n}$, thus it has a size of $(n-k) \cdot n = 500 \cdot 1024$ bits.
+
+\subsubsection*{Secret-key}
+$(S, H, P)$, where $S \in \mathbb{F}_2^{(n-k) \times (n-k)}$, $H \in \mathbb{F}_2^{(n-k) \times n}$, and $P \in \mathbb{F}_2^{n \times n}$.\\
+Thus, the secret key has a size of 500 $\cdot$ 500 + 500 $\cdot$ 1024 + 8749 bits.  
+
+\subsection{Fundamental Function in Classic McEliece}
+By analyzing the Classic McEliece presentation, we can see  three fundamental functions:
+\begin{itemize}
+    \item \textbf{MatGen} (key generation)
+    \item \textbf{Encode} (encryption)
+    \item \textbf{Decode} (decryption)
+\end{itemize}
+
+\subsubsection{MatGen}
+MatGen($\ulcorner$) where $\ulcorner = (g, \alpha_0, \ldots, \alpha_{n-1})$ with g is an irreducible polynomial of degree $t$ over $\mathbb{F}_q$ and $\alpha_0, \ldots, \alpha_{n-1}$ are $n$ distinct elements of $\mathbb{F}_q$.\\
+$\ulcorner$ rapresents a Goppa code over $\mathbb{F}_q = \mathbb{F}_{2^m}$
+
+\subsubsection*{CASE $(\mu, \nu) = (0, 0)$}
+
+\begin{algorithm}
+\begin{algorithmic}[1]
+
+    \State Compute $\tilde{H}$ parity check matrix of the Goppa code defined by $\ulcorner$; $\tilde{H} \in \mathbb{F}_q^{t \times n}$
+
+    \State Compute $\hat{H} \in \mathbb{F}_2^{mt \times n}$ parity check matrix of the Goppa code over $\mathbb{F}_2$(knowing $\hat{H}$ is not possible to recover $\ulcorner$)
+
+    \State Reduce $\hat{H}\leftarrow$ i.e. use Gaussian elimination in order to transform in reduced row echelon form
+
+    \State Return ($T, \ulcorner$) if in 3) we obtain a systemetic form, else return $\perp$ (failure)
+    \end{algorithmic}
+    \end{algorithm}
+
+\newpage
+\subsubsection*{CASE $(\mu, \nu) \neq (0, 0)$}
+
+\begin{algorithm}
+\begin{algorithmic}[1]
+
+    \State Compute $\tilde{H}$ parity check matrix of the Goppa code defined by $\ulcorner$; $\tilde{H} \in \mathbb{F}_q^{t \times n}$
+
+    \State Compute $\hat{H} \in \mathbb{F}_2^{mt \times n}$ parity check matrix of the Goppa code over $\mathbb{F}_2$(knowing $\hat{H}$ is not possible to recover $\ulcorner$)
+
+    \State Reduce $\hat{H}\leftarrow$ i.e. use Gaussian elimination in order to transform in reduced row echelon form
+
+    \State Return $\perp$ if in 3) we don't obtain a semi-systematic form, else perform steps 4), 5) and 6) (of paper)
+
+    \State Return ($T, c_{mt-\mu}, \ldots, c_{mt-1}, \ulcorner'$) where $\ulcorner' = (g, \alpha_0', \ldots, \alpha_{n-1}')$ (($\alpha_0', \ldots, \alpha_{n-1}'$) is a permutation of ($\alpha_0, \ldots, \alpha_{n-1}$) in order to avoid the permutation in de decoding phase)
+
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection{Encode}
+Encode($\vect{e}, T$) where $\vect{e} \in \mathbb{F}_2^n$ , $w(\vect{e}) = t$ and $T$ is the output of MatGen($\ulcorner$).
+
+\begin{algorithm}
+\begin{algorithmic}[1]
+
+    \State Compute $H= (I|T)$
+    \State Compute $C=H\cdot \vect{e} \in \mathbb{F}_2^{mt}$ (remeber that $n-k = mt$ so $n = mt + k$)
+
+    \State Return $C$ as ciphertext
+
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection{Decode}
+Decode($C, \ulcorner'$) where $C \in \mathbb{F}_2^{mt}$ output of Encode and $\ulcorner'$ is the last part of the output of MatGen.
+
+\begin{algorithm}
+\begin{algorithmic}[1]
+
+    \State $\vect{\nu} = (C, (0, 0, \ldots, 0) [k-times]) = (\frac{C}{\vect{0}}) \in \mathbb{F}_2^n$ ($\nu$ is a received word abtained from a codeword plus an error vector $\vect{e}$)
+
+    \State Compute Patterson($\vect{\nu}$) = $\vect{c} \in \mathbb{F}_2^n$ codeword 
+
+    \State $\vect{e} = \vect{\nu} + \vect{c}$
+
+    \If{$w(\vect{e}) = t$ and $C = H \cdot \vect{e}$}
+        \State Return $\vect{e}$ as plaintext
+    \Else
+        \State Return $\perp$ (failure)
+    \EndIf
+\end{algorithmic}
+\end{algorithm}
+
+
+\subsection*{Proof of correctness:}
+This algorithm is correct if it is \underline{true} that $\vect{\nu}$  (constructed in step 1) is a received word obtained from a codeword plus an error vector $\vect{e} \iff \vect{nu}$ has the same syndrom as $\vect{e} \iff H\nu = H\vect{e}$.\\
+Let us check that considering $\vect{\nu}$ as in 1) it is true that $H\nu = H\vect{e}$:
+\begin{align*}
+    H\vect{\nu} = (I|T)(\frac{C}{\vect{0}}) = C = H\cdot \vect{e}
+\end{align*}
+
+\subsection{KEM comparison}
+To better understand the difficult related to the implementation of a KEM based on McEliece, let us compare the size of the public key and the ciphertext of a KEM based on McEliece with the size of the public key and the ciphertext of a KEM based on RSA.
+
+\subsubsection{Classic McEliece KEM}
+
+\subsubsection*{Session key}
+$K \in \mathbb{F}_2^{256}$ so we have 256 bits
+
+\subsubsection*{Ciphertext}
+$c \in \mathbb{F}_2^{mt} = \mathbb{F}_2^{n-k}$, thus it has a size of mt bits
+
+\subsubsection*{Public-key}
+$T \in \mathbb{F}_2^{(mt) \times k} = \mathbb{F}_2^{(n-k) \times k}$, thus it has a size of $mt \cdot k$ bits
+
+\subsubsection*{Secret key}
+it is a quintuple $(\delta, c, g, \alpha, s)$ where:
+\begin{itemize}
+    \item $\delta$ is a seed, 256 bits
+    \item $c$ is a column swapped, x bits
+    \item $g$ is an irreducible polynomial of degree $t$ over $\mathbb{F}_q = \mathbb{F}_{2^m}$, thus it has a size of $t \cdot m$ bits
+    \item $\alpha$ is a ordering of all elements of $\mathbb{F}_q = \mathbb{F}_{2^m}$, via Bens representation, thus it has a size of $(2m-1)2^{m-1}$ bits
+    \item $s$ is an ausiliary vector, $s \in \mathbb{F}_2^n$, thus it has a size of $n$ bits
+\end{itemize}
+Thus, the secret key has a size of 256 + x + $t \cdot m$ + $(2m-1)2^{m-1}$ + $n$ bits
+
+\subsubsection{RSA KEM}
+\subsubsection*{Session key}
+$K \in \mathbb{F}_2^{256}$ so we have 256 bits
+\subsubsection*{Ciphertext}
+$c \in \mathbb{Z}_N$, a bits where $N$ is the modulus
+\subsubsection*{Public-key}
+$N$, a bits
+\subsubsection*{Secret key}
+It is a quintuple $(p, q, d_p, d_q, q_{inv})$ where:
+\begin{itemize}
+    \item $p, q$ are prime s.t. $N = pq$, thus they have a size of $\frac{a}{2}$ bits
+    \item $d_p = d \mod \varphi(p)$, thus it has a size of $\frac{a}{2}$ bits
+    \item $d_q = d \mod \varphi(q)$, thus it has a size of $\frac{a}{2}$ bits
+    \item $q_{inv} = q^{-1} \mod p$, thus it has a size of $\frac{a}{2}$ bits
+\end{itemize}
+Thus, the secret key has a size of $5 \cdot \frac{a}{2}$ bits
+
+\vspace{1 cm}
+\noindent
+It possible visualize the comparison, using real numbers.
+\newpage
+
+\noindent
+For CM, we have $m = 12, t = 64, n = 3488, v = (0 \text{ or } 64)$, 0 if we use the semi-systematic form, 64 if we use the systematic form
+\medskip
+
+\noindent
+For RSA, we choose $N$ s.t. a = 3072 bits.
+
+\begin{table}[h]
+    \centering
+    \small
+    \renewcommand{\arraystretch}{1.35}
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{|c|c|c|}
+        \hline
+        \rowcolor{gray!20}
+        \textbf{Metric} & \textbf{CM} & \textbf{RSA} \\
+        \hline
+        \textbf{Security} & 126 bits & 128 bits \\
+        \hline
+        \textbf{Session key} & 256 bits & 256 bits \\
+        \hline
+        \textbf{Ciphertext} & $12 \cdot 64 = 7698$ bits $\sim$ 0.1 KB & 3072 bits $\sim$ 0.4 KB \\
+        \hline
+        \textbf{Public key} & $12 \cdot 64 \cdot 2720 \sim 2.000.000$ bits $\sim$ 250 KB & 3072 bits $\sim$ 0.4 KB \\
+        \hline
+        \textbf{Secret key} & $256 + 64 + 768 + 47104 + 3488 \sim 50.000$ bits $\sim$ 6 KB & $5 \cdot \frac{3072}{2} \sim 7.680$ bits $\sim$ 1 KB \\
+        \hline
+    \end{tabular}%
+    }
+\end{table}
+\medskip
+
+\noindent
+In a more realistic scenario, we can consider the parameters of CM with $m = 13, t = 128, n = 8192, v = 64$ and the parameters of RSA with $N$ s.t. a = 15360 bits.
+\begin{table}[h]
+    \centering
+    \small
+    \renewcommand{\arraystretch}{1.35}
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{|c|c|c|}
+        \hline
+        \rowcolor{gray!20}
+        \textbf{Metric} & \textbf{CM} & \textbf{RSA} \\
+        \hline
+        \textbf{Security} & 256 bits & 256 bits \\
+        \hline
+        \textbf{Session key} & 256 bits & 256 bits \\
+        \hline
+        \textbf{Ciphertext} & $13 \cdot 128 = 1664$ bits $\sim$ 0.2 KB & 15360 bits $\sim$ 1.9 KB \\
+        \hline
+        \textbf{Public key} & $1664 \cdot 6528 \sim 10.000.000$ bits $\sim$ 1250 KB & 15360 bits $\sim$ 1.9 KB \\
+        \hline
+        \textbf{Secret key} & $256 + 64 + 1664 + 1024000 + 8192 \sim 112.000$ bits $\sim$ 14 KB & $5 \cdot \frac{15360}{2} \sim 38.400$ bits $\sim$ 4.75 KB \\
+        \hline
+    \end{tabular}%
+    }
+\end{table}
+
+\newpage
+\subsection{Hamming Quasi-Cycling}
+\begin{quotation}
+    \textit{\textbf{Authr's note:} For the HQC, I strongly suggest to read the original paper, because the professor only gives a very high level overview of the scheme, and it's not possible to understand the details of the scheme without reading the original paper.}
+\end{quotation}
+
+\noindent
+Before understend the high level details, let me give the pricipal definitions.
+
+\begin{defBox}{Cycling code}
+    aA cycling code $C \subseteq \mathbb{F}_q^n$ is clyclic $\iff \forall \vect{c} \in C$ we have $\sigma(\vect{c}) \in C$ where $\sigma(\vect{c}) = \sigma(c_0, c_1, \ldots, c_{n-1}) = (c_{n-1}, c_0, c_1, \ldots, c_{n-2})$ is the cycling operator (so it rapresent a "special permutation").
+\end{defBox}
+
+\noindent
+Remember that we can always rapresent a vector of lenght n as a polynomial of degree at most n-1, i.e., an element of $\mathbb{F}_q[x]/f(x)$ where $f(x)$ is a polynomial of degree n NOT NECESSARILY irreducible.
+\medskip
+
+\noindent
+Let us consider $R = \mathbb{F}_q[x] / (X^n - 1)$ then 
+\begin{center}
+    $\vect{c} = (c_0, c_1, \ldots, c_{n-1}) \in \mathbb{F}_q^n$ can be rapresented as $c(x) = c_0 + c_1x + \ldots + c_{n-1}x^{n-1} \in R$
+\end{center}
+
+\noindent
+Thus, we can observe that 
+\begin{align*}
+    \sigma(\vect{c}) &= (c_{n-1}, c_0, c_1, \ldots, c_{n-2}) \\
+    &\leftrightarrow c_{n-1} + c_0x + c_1x^2 + \ldots + c_{n-2}x^{n-1} \\
+    &= x \cdot c(x) \text{ remebering that } x^n = 1 \text{in R}
+\end{align*}
+
+\noindent
+Thus, we can say that a code $C \subseteq \mathbb{F}_q^n$ is cycling if and only if is closed under the action of $\sigma$.\\
+Equivalently a code $C \subseteq R$ is cycling if and only if is closed under the action of $x$.\\
+Moreover, we can also have that
+
+\begin{align*}
+    c(x) \in C \implies x \cdot c(x) \in C \implies x^2 \cdot c(x) \in C \implies \ldots \implies x^h \cdot c(x) \in C \text{ for every } h \in \mathbb{N}
+\end{align*}
+
+\noindent
+Moreover, since $C$ is linearm it is closer under the sum:
+\begin{align*}
+    c(x) \in C \implies x^{h_1} \cdot c(x) \in C \text{ and } x^{h_2} \cdot c(x) \in C \implies x^{h_1} \cdot c(x) + x^{h_2} \cdot c(x) \in C
+\end{align*}
+\noindent
+and it is also closed under multiplication by a scalar
+\begin{align*}
+    c(x) \in C \implies x^h \cdot c(x) \in C \text{ and } a_2 \cdot x^{h_2} \cdot c(x) \in C \implies a_1 \cdot x^{h_1} \cdot c(x) + a_2 \cdot x^{h_2} \cdot c(x) \in C
+\end{align*}
+
+\noindent
+Thus, a cycling code $C$ is closed under the multiplication by ANY element of $R$ (since $R$ is generated by $x$):
+\begin{align*}
+    c(x) \in C \implies g(x) \cdot c(x) \in C, \forall g(x) \in R
+\end{align*}
+
+
+\subsubsection{HQC overview}
+
+Hamming Quasi-Cyclic, usually denoted as HQC, is a code-based Key Encapsulation 
+Mechanism. Its security is based on the hardness of decoding random quasi-cyclic 
+codes, more precisely on the Quasi-Cyclic Syndrome Decoding problem.
+
+\medskip
+
+\noindent
+Differently from Classic McEliece, HQC does not rely on hiding a highly structured family of codes such as Goppa codes. Instead, it uses quasi-cyclic codes in order to reduce the size of the public key, while keeping the decoding problem hard.
+\medskip
+
+\noindent
+The main idea is to work in the ring
+
+\[
+R = \mathbb{F}_2[X]/(X^n - 1),
+\]
+
+\noindent
+so that vectors of length \(n\) can be represented as polynomials modulo \(X^n-1\). In this representation, cyclic shifts correspond to multiplication by \(X\). This allows HQC to exploit a quasi-cyclic structure and to describe large matrices in a compact way.
+\medskip
+
+\noindent
+HQC uses two main building blocks:
+\begin{itemize}
+    \item a random double-circulant code, used in the public-key encryption part;
+    \item a decodable error-correcting code \(\mathcal{C}\), instantiated through 
+    concatenated Reed--Muller and Reed--Solomon codes.
+\end{itemize}
+
+\medskip
+
+\noindent
+The Reed--Muller and Reed--Solomon concatenated code is used to correct the 
+noise introduced during encryption. Thus, the correctness of HQC depends on the 
+ability of this code to decode the resulting error vector.
+
+\subsubsection{Main algorithms}
+
+HQC is specified both as a public-key encryption scheme, denoted HQC-PKE, and as a Key Encapsulation Mechanism, denoted HQC-KEM.\\ 
+The KEM version is obtained from the PKE version using the Fujisaki--Okamoto transformation.
+
+\subsubsection*{HQC-PKE.Keygen}
+
+\begin{algorithm}
+\begin{algorithmic}[1]
+    \State Generate secret sparse vectors \(x,y \in R\)
+    \State Generate a public random vector \(h \in R\)
+    \State Compute
+    \[
+        s = x + h \cdot y
+    \]
+    \State Return the encryption key \(ek_{PKE} = (h,s)\)
+    \State Return the decryption key \(dk_{PKE} = y\)
+\end{algorithmic}
+\end{algorithm}
+
+\noindent
+The public key contains the vectors needed to encrypt, while the secret key contains the information needed to remove the noise during decryption.
+
+\subsubsection*{HQC-PKE.Encrypt}
+
+\begin{algorithm}
+\begin{algorithmic}[1]
+    \State Encode the message \(m\) using the error-correcting code \(\mathcal{C}\)
+    \State Generate random sparse vectors \(r_1,r_2,e \in R\)
+    \State Compute
+    \[
+        u = r_1 + h \cdot r_2
+    \]
+    \State Compute
+    \[
+        v = \mathcal{C}.\text{Encode}(m) + s \cdot r_2 + e
+    \]
+    \State Return the ciphertext
+    \[
+        c_{PKE} = (u,v)
+    \]
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection*{HQC-PKE.Decrypt}
+
+\begin{algorithm}
+\begin{algorithmic}[1]
+    \State Receive the ciphertext \(c_{PKE} = (u,v)\)
+    \State Compute
+    \[
+        v - u \cdot y
+    \]
+    \State Decode the result using \(\mathcal{C}.\text{Decode}\)
+    \State Return the recovered message \(m\)
+\end{algorithmic}
+\end{algorithm}
+
+\noindent
+The decryption works because
+
+\[
+v - u \cdot y
+\]
+
+\noindent
+removes the secret-dependent part of the ciphertext and leaves a noisy encoding of the message, which can be corrected by the code \(\mathcal{C}\).
+
+\subsubsection*{HQC-KEM}
+
+\begin{algorithm}
+\begin{algorithmic}[1]
+    \State \textbf{KeyGen:} generate an HQC-PKE keypair
+    \State \textbf{Encaps:} choose a random message \(m\), derive randomness, encrypt \(m\), and derive the shared key \(K\)
+    \State \textbf{Decaps:} decrypt the ciphertext, recompute the encapsulation, and return the same shared key if the ciphertext is valid
+\end{algorithmic}
+\end{algorithm}
+
+\noindent
+The decapsulation algorithm includes a rejection step. If the recomputed ciphertext is different from the received ciphertext, the algorithm returns a pseudorandom rejection key. This is used to obtain IND-CCA2 security.
+
+\subsubsection{Particularities of HQC}
+
+\begin{itemize}
+    \item HQC is a code-based KEM based on quasi-cyclic syndrome decoding.
+    \item The quasi-cyclic structure allows a reduction of the key size compared to 
+    generic code-based constructions.
+    \item The scheme uses concatenated Reed--Muller and Reed--Solomon codes to 
+    correct decryption errors.
+    \item HQC-PKE is IND-CPA secure, while HQC-KEM is IND-CCA2 secure thanks to 
+    the Fujisaki--Okamoto transformation.
+    \item The main limitation is that HQC has larger ciphertexts and slower 
+    implementations compared to some lattice-based KEMs.
+\end{itemize}
+\subsubsection{Comparison with other schemes}
+
+To make the comparison meaningful, we consider schemes providing approximately 
+the same security level, namely about \(256\) bits of security or NIST security 
+level 5.
+
+\medskip
+
+\noindent
+First, we compare the public-key encryption schemes discussed above: RSA, 
+McEliece, Niederreiter and HQC-PKE. RSA is compact, but it is not post-quantum 
+secure. McEliece and Niederreiter are code-based and post-quantum secure, but 
+they require large public keys. HQC-PKE reduces the public-key size by using a 
+quasi-cyclic structure, at the cost of a larger ciphertext.
+
+\begin{table}[H]
+\centering
+\small
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+\rowcolor{gray!20}
+\textbf{PKE Scheme} & \textbf{Security Level} & \textbf{Public Key} & \textbf{Secret Key} & \textbf{Ciphertext Size} \\
+\hline
+
+RSA-15360 & \(\approx 256\) bits & \(\approx 1.9\) KB & \(\approx 4.75\) KB & \(\approx 1.9\) KB \\
+\hline
+
+McEliece PKE & \(\approx 256\) bits & \(\approx 6.4\) MB & \(\approx 14\) KB & \(\approx 1\) KB \\
+\hline
+
+Niederreiter PKE & \(\approx 256\) bits & \(\approx 1.6\) MB & \(\approx 14\) KB & \(\approx 0.2\) KB \\
+\hline
+
+HQC-PKE-5 & NIST-5 & \(\approx 7.1\) KB & \(\approx 0.03\) KB & \(\approx 14.1\) KB \\
+\hline
+
+\end{tabular}
+\caption{Approximate comparison of PKE schemes at the 256-bit security level.}
+\label{tab:pke_comparison_256}
+\end{table}
+
+\medskip
+
+\noindent
+From the table, we can observe that HQC-PKE has a much smaller public key than 
+McEliece and Niederreiter. However, this advantage is paid with a larger 
+ciphertext. RSA remains very compact, but it is not secure against quantum 
+attacks.
+
+\bigskip
+
+\noindent
+We can also compare the corresponding KEM constructions at the same security 
+level. In this case, the comparison is between RSA-KEM, Classic McEliece KEM and 
+HQC-KEM.
+
+\begin{table}[H]
+\centering
+\small
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+\rowcolor{gray!20}
+\textbf{KEM Scheme} & \textbf{Security Level} & \textbf{Public Key} & \textbf{Secret Key} & \textbf{Ciphertext Size} \\
+\hline
+
+RSA-KEM & \(\approx 256\) bits & \(\approx 1.9\) KB & \(\approx 4.75\) KB & \(\approx 1.9\) KB \\
+\hline
+
+Classic McEliece KEM & \(\approx 256\) bits & \(\approx 1.2\) MB & \(\approx 14\) KB & \(\approx 0.2\) KB \\
+\hline
+
+HQC-KEM-5 & NIST-5 & \(\approx 7.1\) KB & \(\approx 7.2\) KB & \(\approx 14.1\) KB \\
+\hline
+
+\end{tabular}
+\caption{Approximate comparison of KEM schemes at the 256-bit security level.}
+\label{tab:kem_comparison_256}
+\end{table}
+
+\medskip
+
+\noindent
+Thus, HQC-KEM can be seen as a compromise between the two extremes. It avoids 
+the very large public key of Classic McEliece, while remaining post-quantum 
+secure. The price to pay is a larger ciphertext and a higher computational cost 
+during decapsulation.
